@@ -1,0 +1,137 @@
+/** Less mixins
+---------------------*/
+html {
+  color: #36454f;
+}
+body {
+  font-size: 1.5em;
+  line-height: 1.6;
+  background: url('img/bg.jpg') repeat;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  background-attachment: fixed;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+.logo {
+  width: 100px;
+  height: 60px;
+  background: url('img/logo.png') no-repeat;
+  -webkit-background-size: contain;
+  -moz-background-size: contain;
+  -o-background-size: contain;
+  background-size: contain;
+  float: left;
+  padding-right: 20px;
+}
+.logo span {
+  display: none;
+}
+#main {
+  min-height: 100%;
+  positoin: static;
+}
+#site {
+  color: #36454f;
+  position: relative;
+  min-height: 100%;
+}
+header {
+  background: url('img/section.jpg');
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  width: 100%;
+}
+#view {
+  padding: 10px;
+  padding-bottom: 128px;
+  /* Height of footer */
+}
+footer {
+  background: url('img/section.jpg') no-repeat;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 128px;
+  /* Height of footer */
+}
+footer i {
+  padding: 5px;
+}
+.centerText {
+  text-align: center;
+}
+.wrapper {
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+.cwrapper {
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+.page {
+  display: block;
+  width: 100%;
+  border-bottom: 1px solid #dddddd;
+  padding: 60px 0px 60px 0px;
+}
+nav + .page {
+  border-top-width: 0;
+}
+nav {
+  padding-top: 39px;
+  display: block;
+  width: 100%;
+  z-index: 99;
+}
+nav .container {
+  width: 100%;
+}
+nav ul,
+nav ol {
+  list-style: none;
+  margin-bottom: 0px;
+  padding-left: 0;
+  margin-top: 0px;
+  display: block;
+}
+nav ul li,
+nav ol li {
+  position: relative;
+  float: left;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  background-color: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .2rem;
+  margin-right: 35px;
+  text-decoration: none;
+}
+nav ul li a,
+nav ol li a {
+  text-transform: uppercase;
+  color: #337ab7;
+}
+nav ul li a.active,
+nav ol li a.active {
+  font-weight: bold;
+  color: #00b7ff;
+}
+nav ul li a:hover,
+nav ol li a:hover {
+  cursor: pointer;
+}
