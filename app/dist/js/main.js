@@ -4,11 +4,31 @@
 var React = require('react');
 var page = require('page');
 
-var navigate = function (url) {
-  return function () {
-    page(url);
+
+/* User */
+var user = null;
+
+/* Utils */
+var utils = (function() {
+  var animEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
+
+  function animateOnce(sel, cls) {
+    $(sel).addClass(cls).one(animEnd, function () {
+      $(this).removeClass(cls);
+    })
+  };
+
+  function navigate (url) {
+    return function () {
+      page(url);
+    }
+  };
+
+  return {
+    animateOnce: animateOnce,
+    navigate: navigate
   }
-};
+})();
 
 /* Components */
 
@@ -27,7 +47,9 @@ var Router = React.createClass({displayName: "Router",
       var Component = route[1];
 
       page(url, function (ctx) {
-        console.log(ctx.state);
+        console.log('STATE: ' + ctx.state);
+        console.log('PATHNAME: ' + ctx.pathname);
+        console.log('______________');
 
         self.setState({
           component: (
@@ -35,14 +57,13 @@ var Router = React.createClass({displayName: "Router",
               React.createElement("header", null, 
                 React.createElement("div", {className: "container"}, 
                   React.createElement("div", {className: "row"}, 
-                    React.createElement(Nav, {pathname: ctx.state.pathname})
+                    React.createElement(Nav, {pathname: ctx.pathname}), 
+                    React.createElement(AccountBox, null)
                   )
                 )
               ), 
               React.createElement("div", {id: "view"}, 
-                React.createElement("div", {className: "container"}, 
-                  React.createElement(Component, {params: ctx.params, querystring: ctx.querystring}), 
-                  React.createElement(Component, {params: ctx.params, querystring: ctx.querystring}), 
+                React.createElement("div", {className: "view-wrap"}, 
                   React.createElement(Component, {params: ctx.params, querystring: ctx.querystring})
                 )
               ), 
@@ -54,11 +75,11 @@ var Router = React.createClass({displayName: "Router",
             )
           )
         });
-      });
+      }); // page()
     });
 
     page.start();
-  },
+  }, // componentDidMount
 
   render: function () {
     return this.state.component;
@@ -67,7 +88,6 @@ var Router = React.createClass({displayName: "Router",
 });
 
 var Nav = React.createClass({displayName: "Nav",
-
   getInitialState: function () {
     return {
       active: 0,
@@ -77,21 +97,21 @@ var Nav = React.createClass({displayName: "Nav",
       },{
         url: '/about',
         text: 'About'
+      },{
+        url: '/login',
+        text: 'Login'
       }]
     }
-  },
-
-  activate: function (index) {
-    this.state.active = index;
-    console.log("new index: " + index);
   },
 
   render: function () {
     var self = this;
     var components = this.state.navItems.map(function (item, index) {
-      return React.createElement(NavItem, {activate: self.activate, index: index, 
-        active: self.state.active === index, url: item.url, text: item.text})
+      return React.createElement(NavItem, {index: index, 
+        active: self.props.pathname === item.url, url: item.url, text: item.text})
     });
+        
+        //active={self.state.active === index} url={item.url} text={item.text} />
 
     return (
       React.createElement("div", null, 
@@ -110,9 +130,7 @@ var Nav = React.createClass({displayName: "Nav",
 
 var NavItem = React.createClass({displayName: "NavItem",
   handleClick: function () {
-    this.props.activate(this.props.index);
-    navigate(this.props.url)();
-    console.log(this.props);
+    utils.navigate(this.props.url)();
   },
   render: function () {
     return (
@@ -169,6 +187,93 @@ var PageNotFound = React.createClass({displayName: "PageNotFound",
   }
 });
 
+var LoginPage = React.createClass({displayName: "LoginPage",
+  forgotPassword: function (str) {
+    if (str === 'show') {
+      $('.overlay').fadeIn();
+      $('#forget-modal').slideDown();
+    } else {
+      $('.overlay').fadeOut();
+      $('#forget-modal').slideUp();
+    }
+  },
+  render: function () {
+    var self = this;
+
+    return (
+      React.createElement("div", {className: "page"}, 
+        React.createElement("div", {className: "overlay"}), 
+        React.createElement("div", {className: "container", id: "loginContainer"}, 
+          React.createElement("div", {className: "row centerBlock"}, 
+            React.createElement("div", {className: "three columns"}), 
+            React.createElement("div", {className: "six columns"}, 
+              React.createElement("form", {className: "form-wrap", role: "form", action: "javascript:;", 
+             method: "post", id: "login-form", autoComplete: "on"}, 
+                React.createElement("h1", null, "Login"), 
+                React.createElement("div", {className: "form-group"}, 
+                  React.createElement("label", {for: "loginEmailInput"}, "Email"), 
+                  React.createElement("input", {className: "u-full-width", type: "email", 
+                   placeholder: "user@example.com", id: "loginEmailInput"})
+                ), 
+
+                React.createElement("div", {className: "form-group"}, 
+                  React.createElement("label", {for: "loginPasswordInput"}, "Password"), 
+                  React.createElement("input", {className: "u-full-width", type: "password", 
+                  id: "loginPasswordInput", placeholder: "password"})
+                ), 
+                
+                React.createElement("div", {className: "form-group"}, 
+                  React.createElement("button", {className: "button button-primary u-full-width", onClick: function() {
+                    utils.animateOnce('#loginContainer', 'animated shake');
+                  }}, "Login")
+                )
+              ), 
+
+              React.createElement("a", {className: "forgotPasswordLink", 
+               onClick: function () {
+                self.forgotPassword('show');
+               }, href: "javascript:;"}, "Forgot your password?"), 
+
+              React.createElement("hr", null), 
+
+              React.createElement("div", {className: "modal"}, 
+                React.createElement("div", {id: "forget-modal", className: "six columns"}, 
+                  React.createElement("div", {className: "modal-content"}, 
+                    React.createElement("div", {className: "modal-header"}, 
+                      React.createElement("button", {type: "button", className: "close", onClick: function () {
+                        self.forgotPassword('hide');
+                       }}, 
+                        React.createElement("span", null, "X")
+                      ), 
+                      React.createElement("h4", {className: "modal-title"}, "Password Recovery")
+                    ), 
+                    React.createElement("div", {className: "modal-body"}, 
+                      React.createElement("p", null, "Type your email address"), 
+                      React.createElement("input", {type: "email", name: "recovery-email", id: "recovery-email", 
+                       autoComplete: "off"})
+                    ), 
+                    React.createElement("div", {className: "modal-footer"}, 
+                      React.createElement("button", {type: "button", className: "button", onClick: function () {
+                        self.forgotPassword('hide');
+                       }}, "Cancel"), 
+                      React.createElement("button", {type: "button", className: "button button-primary", onClick: function () {
+                        self.forgotPassword('hide');
+                       }}, "Recovery")
+                    )
+                  )
+                )
+              )
+
+            )
+          )
+        )
+
+
+      )
+    );
+  }
+});
+
 var Footer = React.createClass({displayName: "Footer",
   render: function () {
     return (
@@ -203,6 +308,61 @@ var Logo = React.createClass({displayName: "Logo",
   }
 });
 
+user = {
+  name: 'Dave'
+}
+user = null;
+
+var Dropdown = React.createClass({displayName: "Dropdown",
+  render: function () {
+    var list = ['Link','Link','Link'];
+
+    list = list.map(function (index) {
+      return React.createElement("li", null, React.createElement("a", null, index))
+    });
+
+    return (
+      React.createElement("div", {className: "dropdown"}, 
+        React.createElement("a", {href: "#"}, 
+          React.createElement("div", {className: "dropdown-lines"}, 
+            React.createElement("span", {className: "dropdown-line"}), 
+            React.createElement("span", {className: "dropdown-line"}), 
+            React.createElement("span", {className: "dropdown-line"})
+          )
+        ), 
+        React.createElement("ul", {className: "dropdown-menu"}, 
+          React.createElement("span", {className: "dropdown-block"}, 
+            React.createElement("span", {className: "triangle-up"})
+          ), 
+          list
+        )
+      )
+    );
+  }
+});
+
+var AccountBox = React.createClass({displayName: "AccountBox",
+  render: function () {
+
+    if (!user) {
+      // No user logged in
+      return (
+        React.createElement("div", {className: "accountBox"}, 
+          React.createElement(Dropdown, null)
+        )
+      );
+    } else {
+      // User logged in
+      return (
+        React.createElement("div", {className: "accountBox"}, 
+          React.createElement(Dropdown, null), 
+          React.createElement("span", null, user.name || 'No User Name Found')
+        )
+      );
+    }
+  }
+});
+
 /* Routes */
 
 var routes = [
@@ -211,6 +371,7 @@ var routes = [
   ['/users/:id', Users],
   ['/query', Query],
   ['/code', Code],
+  ['/login', LoginPage],
   ['*', PageNotFound],
 ];
 
