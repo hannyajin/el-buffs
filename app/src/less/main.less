@@ -98,7 +98,6 @@ html, body {
     }
     &.active {
       color: @color_alink;
-      //text-decoration: underline;
 
       &:hover {
         color: @color_halink;
@@ -221,7 +220,8 @@ hr {
   display: none;
 }
 
-.forgotPasswordLink {
+.specialLink {
+  display: inline-block;
   text-decoration: none;
   &:hover {
     text-decoration: underline;
@@ -341,6 +341,11 @@ nav {
 
       a {
         text-transform: uppercase;
+        text-align: center;
+
+        &.active {
+          //border-bottom: 2px solid;
+        }
 
         &:hover {
           cursor: pointer;

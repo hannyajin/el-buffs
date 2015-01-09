@@ -4966,10 +4966,11 @@ hr {
   top: 0;
   display: none;
 }
-.forgotPasswordLink {
+.specialLink {
+  display: inline-block;
   text-decoration: none;
 }
-.forgotPasswordLink:hover {
+.specialLink:hover {
   text-decoration: underline;
 }
 .modal-content {
@@ -5073,6 +5074,7 @@ nav ol li {
 nav ul li a,
 nav ol li a {
   text-transform: uppercase;
+  text-align: center;
 }
 nav ul li a:hover,
 nav ol li a:hover {

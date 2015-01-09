@@ -13,9 +13,6 @@ var Nav = React.createClass({
       },{
         url: '/about',
         text: 'About'
-      },{
-        url: '/login',
-        text: 'Login'
       }]
     }
   },
@@ -46,7 +43,7 @@ var Nav = React.createClass({
 
 var NavItem = React.createClass({
   handleClick: function () {
-    utils.navigate(this.props.url)();
+    utils.navigate(this.props.url);
   },
   render: function () {
     return (
