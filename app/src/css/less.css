@@ -19,6 +19,22 @@ body {
   padding: 0;
   height: 100%;
 }
+html a,
+body a {
+  color: #00b7ff;
+}
+html a:hover,
+body a:hover {
+  color: #2f71a8;
+}
+html a.active,
+body a.active {
+  color: #ee5a77;
+}
+html a.active:hover,
+body a.active:hover {
+  color: #a10020;
+}
 .logo {
   width: 100px;
   height: 60px;
@@ -28,7 +44,7 @@ body {
   -o-background-size: contain;
   background-size: contain;
   float: left;
-  padding-right: 20px;
+  padding-right: 50px;
 }
 .logo span {
   display: none;
@@ -69,9 +85,6 @@ footer {
 }
 footer i {
   padding: 5px;
-}
-footer a:hover {
-  color: #23527c;
 }
 .centerText {
   text-align: center;
@@ -126,7 +139,6 @@ hr {
 }
 .forgotPasswordLink:hover {
   text-decoration: underline;
-  color: #23527c;
 }
 .modal-content {
   z-index: 51;
@@ -197,7 +209,7 @@ nav + .page {
   border-top-width: 0;
 }
 nav {
-  padding-top: 39px;
+  padding-top: 40px;
   display: block;
   width: 100%;
   z-index: 99;
@@ -229,12 +241,6 @@ nav ol li {
 nav ul li a,
 nav ol li a {
   text-transform: uppercase;
-  color: #337ab7;
-}
-nav ul li a.active,
-nav ol li a.active {
-  font-weight: bold;
-  color: #00b7ff;
 }
 nav ul li a:hover,
 nav ol li a:hover {
@@ -248,7 +254,7 @@ nav ol li a:hover {
   margin: 0;
 }
 .accountBox a {
-  color: #337ab7;
+  color: #00b7ff;
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -258,7 +264,7 @@ nav ol li a:hover {
 }
 .accountBox a.active {
   font-weight: bold;
-  color: #00b7ff;
+  color: #ee5a77;
 }
 .accountBox a:hover {
   cursor: pointer;
@@ -269,7 +275,7 @@ nav ol li a:hover {
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid #23527c;
+  border-bottom: 8px solid #263145;
   top: 0px;
   right: 0px;
 }
@@ -292,7 +298,7 @@ nav ol li a:hover {
   top: 30px;
   display: none;
   position: absolute;
-  background: #23527c;
+  background: #263145;
   float: left;
   z-index: 999;
   list-style: none;
@@ -312,29 +318,32 @@ nav ol li a:hover {
   text-align: right;
   text-decoration: none;
   line-height: 1;
-  color: #337ab7;
+  color: #00b7ff;
 }
 .dropdown .dropdown-menu a:hover {
-  color: #00b7ff;
+  color: #2f71a8;
 }
 .dropdown .dropdown-lines {
   position: absolute;
   bottom: 0px;
 }
+.dropdown .dropdown-lines:hover .dropdown-line {
+  background: #2f71a8;
+}
 .dropdown .dropdown-lines .dropdown-line {
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
   -moz-background-clip: padding;
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
   position: relative;
   display: block;
   width: 34px;
-  height: 6px;
+  height: 4px;
   top: 2px;
   margin-bottom: 7px;
-  background: #337ab7;
+  background: #00b7ff;
 }
 .overlay {
   display: none;

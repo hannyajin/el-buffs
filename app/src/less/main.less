@@ -56,13 +56,19 @@
 @color_bg: #fcfaf2;
 @color_bgc: #ddd;
 @color_text: #36454f;
-@color_flavour: #00B7FF;
+@color_flavour: #8BC984;
 
-@color_alink: #00B7FF;
-@color_link: #337ab7;
-@color_dlink: #23527c;
+@color_buffred: #C60C31;
+@color_buffred_lt: #EE5A77;
+@color_buffred_dk: #A10020;
 
-@dropdown_bg: @color_dlink;
+@color_link: #00B7FF;
+@color_alink: @color_buffred_lt;
+@color_dlink: #337ab7;
+@color_hlink: #2F71A8;
+@color_halink: @color_buffred_dk;
+
+@dropdown_bg: #263145;
 
 
 html {
@@ -83,6 +89,22 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+
+  // link reset
+  a {
+    color: @color_link;
+    &:hover {
+      color: @color_hlink;
+    }
+    &.active {
+      color: @color_alink;
+      //text-decoration: underline;
+
+      &:hover {
+        color: @color_halink;
+      }
+    }
+  }
 }
 
 .logo {
@@ -91,7 +113,7 @@ html, body {
   background: url('img/logo.png') no-repeat;
   .background-size(contain);
   float: left;
-  padding-right: 20px;
+  padding-right: 50px;
 
   span {
     display: none;
@@ -134,12 +156,6 @@ footer {
   bottom: 0;
   width: 100%;
   height: 128px; /* Height of footer */
-
-  a {
-    &:hover {
-      color: @color_dlink;
-    }
-  }
 }
 
 .centerText {
@@ -209,7 +225,6 @@ hr {
   text-decoration: none;
   &:hover {
     text-decoration: underline;
-    color: @color_dlink;
   }
 }
 
@@ -292,7 +307,7 @@ nav {
     width: 100%;
   }
 
-  padding-top: 39px;
+  padding-top: 40px;
 
   display: block;
   width: 100%;
@@ -326,18 +341,6 @@ nav {
 
       a {
         text-transform: uppercase;
-
-        color: @color_link;
-
-        //border-bottom: 3px solid;
-        //border-color: @color_flavour;
-
-        &.active {
-          font-weight: bold;
-          color: @color_alink;
-          //border-bottom: 3px solid;
-          //border-color: @color_flavour;
-        }
 
         &:hover {
           cursor: pointer;
@@ -435,7 +438,7 @@ nav {
       color: @color_link;
 
       &:hover {
-        color: @color_alink;
+        color: @color_hlink;
       }
     }
   } // .dropdown-menu
@@ -444,12 +447,18 @@ nav {
     position: absolute;
     bottom: 0px;
 
+    &:hover {
+      .dropdown-line {
+        background: @color_hlink;
+      }
+    }
+
     .dropdown-line {
-      .border-radius(6px);
+      .border-radius(2px);
       position: relative;
       display: block;
       width: 34px;
-      height: 6px;
+      height: 4px;
       top: 2px;
       margin-bottom: 7px;
       background: @color_link;
