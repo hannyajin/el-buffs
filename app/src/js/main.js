@@ -18,6 +18,7 @@ var CodePage = require('./pages/CodePage');
 var PageNotFound = require('./pages/PageNotFound');
 var LoginPage = require('./pages/LoginPage');
 var RegisterPage = require('./pages/RegisterPage');
+var RegisteredPage = require('./pages/RegisteredPage');
 
 /* Routes */
 
@@ -30,6 +31,7 @@ var routes = [
   ['/code', CodePage],
   ['/login', LoginPage],
   ['/register', RegisterPage],
+  ['/registered', RegisteredPage],
   ['*', PageNotFound],
 ];
 

@@ -1,6 +1,7 @@
 var React = require('react');
 
 var utils = require('../utils');
+var client = require('../client');
 
 var LoginForm = React.createClass({
   forgotPassword: function (str) {
@@ -14,7 +15,27 @@ var LoginForm = React.createClass({
   },
 
   login: function () {
-    utils.animateOnce('#loginContainer', 'animated shake');
+    var email = $('#loginContainer #loginEmailInput');
+    var pass = $('#loginContainer #loginPasswordInput');
+
+    if (email.val().indexOf('@') < 0 || email.val().length < 3
+        || pass.val().length < 1) {
+      utils.animateOnce('#loginContainer', 'animated shake');
+    } else {
+      // xhr post login
+      client.login({
+        username: email.val(),
+        password: pass.val()
+      }, function done (data, status, xhr) {
+        client.setToken(data.token);
+        console.log("TOKEN: " + data.token);
+        utils.navigate('/');
+      }, function fail (xhr, status, err) {
+        //alert('login failed: ' + status);
+        console.log("LOGIN failed. No such user.")
+        utils.animateOnce('#loginContainer', 'animated shake');
+      });
+    }
   },
 
   render: function () {

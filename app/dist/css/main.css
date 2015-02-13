@@ -4958,7 +4958,7 @@ hr {
 .modal {
   z-index: 50;
 }
-#forget-modal {
+#forget-modal, #message-modal {
   margin: 0 auto;
   text-align: center;
   position: absolute;
@@ -4967,7 +4967,8 @@ hr {
   display: none;
 }
 .specialLink {
-  display: inline-block;
+  display: block;
+  text-align: center;
   text-decoration: none;
 }
 .specialLink:hover {
@@ -5026,6 +5027,8 @@ hr {
   border-top: 1px solid #e5e5e5;
 }
 .modal-content .modal-footer button {
+  top: 2px;
+  right: 2px;
   margin: 5px;
 }
 button.close {

@@ -16,9 +16,9 @@ var defOpts = {
 
 function sendMail(opts, callback) {
   opts.from = defOpts.from;
-  transporter.sendMail(opts, callback);
+  transporter.sendMail(opts, callback); // callback (err, info)
 };
 
-return {
+module.exports = {
   sendMail: sendMail
 }

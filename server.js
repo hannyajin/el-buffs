@@ -9,7 +9,10 @@ var port = process.env.port || 8000;
 
 var browserify = require('browserify-middleware');
 
-app.use(express.static(__dirname + '/dist'));
+var bodyParser = require('body-parser');
+app.use(bodyParser.json());
+
+app.use(express.static('dist'));
 
 app.get('/main.js', function (req, res) {
   return res.sendFile(__dirname + '/app/dist/js/main.js');
@@ -29,6 +32,12 @@ app.get('/fonts/*', function (req, res) {
   return res.sendFile(__dirname + '/app/src/' + parts.pathname);
 });
 
+
+var db = require('./db');
+require('./api')(app);
+
+
+// last catch-all
 app.get('/*', function (req, res) {
   return res.sendFile(__dirname + '/app/index.html');
 });

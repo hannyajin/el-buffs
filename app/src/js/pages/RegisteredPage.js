@@ -1,7 +1,7 @@
 var React = require('react');
 var utils = require('../utils');
 
-var RegisterForm = require('../components/RegisterForm');
+var LoginForm = require('../components/LoginForm');
 
 var RegisterPage = React.createClass({
   render: function () {
@@ -13,7 +13,13 @@ var RegisterPage = React.createClass({
           <div className='row centerBlock'>
             <div className='three columns' />
             <div className='six columns'>
-              <RegisterForm />
+              <h1>Success!</h1>
+              <p>
+                Your account has been registered.
+                Please activate your account by verifying your email.
+              </p>
+              <hr />
+              <LoginForm />
             </div>
           </div>
         </div>
