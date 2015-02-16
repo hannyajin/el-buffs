@@ -34,7 +34,7 @@ function api (app) {
             return done(null, false, {id: 1, message: 'Email not verified.'});
           }
         } else {
-          return done(null, false, {id: 2, message: 'Incorrect Password.'});
+          return done(null, false, {id: 2, message: 'Incorrect Password. ['+ doc.password +'] - ['+ sha1(password + salt) +']'});
         }
       } else {
         // not found
@@ -51,8 +51,9 @@ function api (app) {
     authenticate(json.username, json.password, function (err, user, info) {
       if (err) { return next(err); }
       if (!user) {
+        console.log('!user: ' + info.message || 'No user found.');
         return res.status(401).json({
-          error: 'No such user found.', message: info.message, id: info.id
+          error: info.message || 'No such user found.', message: info.message, id: info.id
         });
       }
 
@@ -63,9 +64,10 @@ function api (app) {
         // this shouldn't happen
         console.log("ERROR: 51:api.js - TOKEN ALREADY SIGNED!!!");
         return res.status(401).json({error: 'Incident has been reported.'});
-      } else {        
+      } else {
         tokenStore[token] = user;
       }
+      console.log("User ["+ (user.email || user.username) +"] has logged in successfully!");
       return res.status(200).json({token: token});
     });
   }); // login
@@ -77,7 +79,7 @@ function api (app) {
 
     var email = json.email;
     var username = json.username;
-    var password = json.password;
+    var password = json.pass;;
 
     db.models.User.findOne( {email: email}, function (err, doc) {
       if (err) {
@@ -93,6 +95,8 @@ function api (app) {
           username: username,
           password: sha1(password + salt)
         };
+        console.log("Registering new user with password: " + data.password);
+        console.log("Given password was ["+ password +"] and salt ["+ salt +"]");
         var user = new db.models.User(data);
         user.save( function (err, doc) {
           if (err) {

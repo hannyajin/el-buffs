@@ -905,7 +905,9 @@ process.chdir = function (dir) {
 },{}],22:[function(require,module,exports){
   /* globals require, module */
 
-/**
+  'use strict';
+
+  /**
    * Module dependencies.
    */
 
@@ -922,13 +924,19 @@ process.chdir = function (dir) {
    * history.location generated polyfill in https://github.com/devote/HTML5-History-API
    */
 
-  var location = window.history.location || window.location;
+  var location = ('undefined' !== typeof window) && (window.history.location || window.location);
 
   /**
    * Perform initial dispatch.
    */
 
   var dispatch = true;
+
+  /**
+   * Decode URL components (query string, pathname, hash).
+   * Accommodates both regular percent encoding and x-www-form-urlencoded format.
+   */
+  var decodeURLComponents = true;
 
   /**
    * Base path.
@@ -943,8 +951,8 @@ process.chdir = function (dir) {
   var running;
 
   /**
-  * HashBang option
-  */
+   * HashBang option
+   */
 
   var hashbang = false;
 
@@ -985,12 +993,10 @@ process.chdir = function (dir) {
       for (var i = 1; i < arguments.length; ++i) {
         page.callbacks.push(route.middleware(arguments[i]));
       }
-    // show <path> with [state]
-    } else if ('string' == typeof path) {
-      'string' === typeof fn
-        ? page.redirect(path, fn)
-        : page.show(path, fn);
-    // start [options]
+      // show <path> with [state]
+    } else if ('string' === typeof path) {
+      page['string' === typeof fn ? 'redirect' : 'show'](path, fn);
+      // start [options]
     } else {
       page.start(path);
     }
@@ -1004,13 +1010,30 @@ process.chdir = function (dir) {
   page.exits = [];
 
   /**
+   * Current path being processed
+   * @type {String}
+   */
+  page.current = '';
+
+  /**
+   * Number of pages navigated to.
+   * @type {number}
+   *
+   *     page.len == 0;
+   *     page('/login');
+   *     page.len == 1;
+   */
+
+  page.len = 0;
+
+  /**
    * Get or set basepath to `path`.
    *
    * @param {String} path
    * @api public
    */
 
-  page.base = function(path){
+  page.base = function(path) {
     if (0 === arguments.length) return base;
     base = path;
   };
@@ -1028,18 +1051,17 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  page.start = function(options){
+  page.start = function(options) {
     options = options || {};
     if (running) return;
     running = true;
     if (false === options.dispatch) dispatch = false;
+    if (false === options.decodeURLComponents) decodeURLComponents = false;
     if (false !== options.popstate) window.addEventListener('popstate', onpopstate, false);
     if (false !== options.click) window.addEventListener('click', onclick, false);
     if (true === options.hashbang) hashbang = true;
     if (!dispatch) return;
-    var url = (hashbang && ~location.hash.indexOf('#!'))
-      ? location.hash.substr(2) + location.search
-      : location.pathname + location.search + location.hash;
+    var url = (hashbang && ~location.hash.indexOf('#!')) ? location.hash.substr(2) + location.search : location.pathname + location.search + location.hash;
     page.replace(url, null, true, dispatch);
   };
 
@@ -1049,8 +1071,10 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  page.stop = function(){
+  page.stop = function() {
     if (!running) return;
+    page.current = '';
+    page.len = 0;
     running = false;
     window.removeEventListener('click', onclick, false);
     window.removeEventListener('popstate', onpopstate, false);
@@ -1066,12 +1090,40 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  page.show = function(path, state, dispatch){
+  page.show = function(path, state, dispatch, push) {
     var ctx = new Context(path, state);
+    page.current = ctx.path;
     if (false !== dispatch) page.dispatch(ctx);
-    if (false !== ctx.handled) ctx.pushState();
+    if (false !== ctx.handled && false !== push) ctx.pushState();
     return ctx;
   };
+
+  /**
+   * Goes back in the history
+   * Back should always let the current route push state and then go back.
+   *
+   * @param {String} path - fallback path to go back if no more history exists, if undefined defaults to page.base
+   * @param {Object} [state]
+   * @api public
+   */
+
+  page.back = function(path, state) {
+    if (page.len > 0) {
+      // this may need more testing to see if all browsers
+      // wait for the next tick to go back in history
+      history.back();
+      page.len--;
+    } else if (path) {
+      setTimeout(function() {
+        page.show(path, state);
+      });
+    }else{
+      setTimeout(function() {
+        page.show(base, state);
+      });
+    }
+  };
+
 
   /**
    * Register route to redirect from one path to other
@@ -1084,18 +1136,18 @@ process.chdir = function (dir) {
   page.redirect = function(from, to) {
     // Define route from a path to another
     if ('string' === typeof from && 'string' === typeof to) {
-      page(from, function (e) {
+      page(from, function(e) {
         setTimeout(function() {
           page.replace(to);
-        },0);
+        }, 0);
       });
     }
 
     // Wait for the push state and replace it with another
-    if('string' === typeof from && 'undefined' === typeof to) {
+    if ('string' === typeof from && 'undefined' === typeof to) {
       setTimeout(function() {
-          page.replace(from);
-      },0);
+        page.replace(from);
+      }, 0);
     }
   };
 
@@ -1108,8 +1160,10 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  page.replace = function(path, state, init, dispatch){
+
+  page.replace = function(path, state, init, dispatch) {
     var ctx = new Context(path, state);
+    page.current = ctx.path;
     ctx.init = init;
     ctx.save(); // save before dispatching, which may redirect
     if (false !== dispatch) page.dispatch(ctx);
@@ -1123,10 +1177,10 @@ process.chdir = function (dir) {
    * @api private
    */
 
-  page.dispatch = function(ctx){
-    var prev = prevContext;
-    var i = 0;
-    var j = 0;
+  page.dispatch = function(ctx) {
+    var prev = prevContext,
+      i = 0,
+      j = 0;
 
     prevContext = ctx;
 
@@ -1138,6 +1192,11 @@ process.chdir = function (dir) {
 
     function nextEnter() {
       var fn = page.callbacks[i++];
+
+      if (ctx.path !== page.current) {
+        ctx.handled = false;
+        return;
+      }
       if (!fn) return unhandled(ctx);
       fn(ctx, nextEnter);
     }
@@ -1163,7 +1222,7 @@ process.chdir = function (dir) {
     var current;
 
     if (hashbang) {
-      current = base + location.hash.replace('#!','');
+      current = base + location.hash.replace('#!', '');
     } else {
       current = location.pathname + location.search;
     }
@@ -1181,9 +1240,9 @@ process.chdir = function (dir) {
    * page is visited.
    */
   page.exit = function(path, fn) {
-    if (typeof path == 'function') {
+    if (typeof path === 'function') {
       return page.exit('*', path);
-    };
+    }
 
     var route = new Route(path);
     for (var i = 1; i < arguments.length; ++i) {
@@ -1192,14 +1251,15 @@ process.chdir = function (dir) {
   };
 
   /**
-  * Remove URL encoding from the given `str`.
-  * Accommodates whitespace in both x-www-form-urlencoded
-  * and regular percent-encoded form.
-  *
-  * @param {str} URL component to decode
-  */
-  function decodeURLEncodedURIComponent(str) {
-    return decodeURIComponent(str.replace(/\+/g, ' '));
+   * Remove URL encoding from the given `str`.
+   * Accommodates whitespace in both x-www-form-urlencoded
+   * and regular percent-encoded form.
+   *
+   * @param {str} URL component to decode
+   */
+  function decodeURLEncodedURIComponent(val) {
+    if (typeof val !== 'string') { return val; }
+    return decodeURLComponents ? decodeURIComponent(val.replace(/\+/g, ' ')) : val;
   }
 
   /**
@@ -1212,31 +1272,29 @@ process.chdir = function (dir) {
    */
 
   function Context(path, state) {
-    path = decodeURLEncodedURIComponent(path);
-    if ('/' === path[0] && 0 !== path.indexOf(base)) path = base + path;
+    if ('/' === path[0] && 0 !== path.indexOf(base)) path = base + (hashbang ? '#!' : '') + path;
     var i = path.indexOf('?');
 
     this.canonicalPath = path;
     this.path = path.replace(base, '') || '/';
+    if (hashbang) this.path = this.path.replace('#!', '') || '/';
 
     this.title = document.title;
     this.state = state || {};
     this.state.path = path;
-    this.querystring = ~i
-      ? path.slice(i + 1)
-      : '';
-    this.pathname = ~i
-      ? path.slice(0, i)
-      : path;
-    this.params = [];
+    this.querystring = ~i ? decodeURLEncodedURIComponent(path.slice(i + 1)) : '';
+    this.pathname = decodeURLEncodedURIComponent(~i ? path.slice(0, i) : path);
+    this.params = {};
 
     // fragment
     this.hash = '';
-    if (!~this.path.indexOf('#')) return;
-    var parts = this.path.split('#');
-    this.path = parts[0];
-    this.hash = parts[1] || '';
-    this.querystring = this.querystring.split('#')[0];
+    if (!hashbang) {
+      if (!~this.path.indexOf('#')) return;
+      var parts = this.path.split('#');
+      this.path = parts[0];
+      this.hash = decodeURLEncodedURIComponent(parts[1]) || '';
+      this.querystring = this.querystring.split('#')[0];
+    }
   }
 
   /**
@@ -1251,12 +1309,9 @@ process.chdir = function (dir) {
    * @api private
    */
 
-  Context.prototype.pushState = function(){
-    history.pushState(this.state
-      , this.title
-      , hashbang && this.path !== '/'
-        ? '#!' + this.path
-        : this.canonicalPath);
+  Context.prototype.pushState = function() {
+    page.len++;
+    history.pushState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
   };
 
   /**
@@ -1265,12 +1320,8 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  Context.prototype.save = function(){
-    history.replaceState(this.state
-      , this.title
-      , hashbang && this.path !== '/'
-        ? '#!' + this.path
-        : this.canonicalPath);
+  Context.prototype.save = function() {
+    history.replaceState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
   };
 
   /**
@@ -1312,9 +1363,9 @@ process.chdir = function (dir) {
    * @api public
    */
 
-  Route.prototype.middleware = function(fn){
+  Route.prototype.middleware = function(fn) {
     var self = this;
-    return function(ctx, next){
+    return function(ctx, next) {
       if (self.match(ctx.path, ctx.params)) return fn(ctx, next);
       next();
     };
@@ -1325,34 +1376,24 @@ process.chdir = function (dir) {
    * populate `params`.
    *
    * @param {String} path
-   * @param {Array} params
+   * @param {Object} params
    * @return {Boolean}
    * @api private
    */
 
-  Route.prototype.match = function(path, params){
+  Route.prototype.match = function(path, params) {
     var keys = this.keys,
-        qsIndex = path.indexOf('?'),
-        pathname = ~qsIndex
-          ? path.slice(0, qsIndex)
-          : path,
-        m = this.regexp.exec(decodeURIComponent(pathname));
+      qsIndex = path.indexOf('?'),
+      pathname = ~qsIndex ? path.slice(0, qsIndex) : path,
+      m = this.regexp.exec(decodeURIComponent(pathname));
 
     if (!m) return false;
 
     for (var i = 1, len = m.length; i < len; ++i) {
       var key = keys[i - 1];
-
-      var val = 'string' === typeof m[i]
-        ? decodeURIComponent(m[i])
-        : m[i];
-
-      if (key) {
-        params[key.name] = undefined !== params[key.name]
-          ? params[key.name]
-          : val;
-      } else {
-        params.push(val);
+      var val = decodeURLEncodedURIComponent(m[i]);
+      if (val !== undefined || !(hasOwnProperty.call(params, key.name))) {
+        params[key.name] = val;
       }
     }
 
@@ -1367,6 +1408,8 @@ process.chdir = function (dir) {
     if (e.state) {
       var path = e.state.path;
       page.replace(path, e.state);
+    } else {
+      page.show(location.pathname + location.hash, undefined, undefined, false);
     }
   }
 
@@ -1375,30 +1418,42 @@ process.chdir = function (dir) {
    */
 
   function onclick(e) {
-    if (1 != which(e)) return;
+
+    if (1 !== which(e)) return;
+
     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
     if (e.defaultPrevented) return;
 
+
+
     // ensure link
     var el = e.target;
-    while (el && 'A' != el.nodeName) el = el.parentNode;
-    if (!el || 'A' != el.nodeName) return;
+    while (el && 'A' !== el.nodeName) el = el.parentNode;
+    if (!el || 'A' !== el.nodeName) return;
 
-    // Ignore if tag has a "download" attribute
-    if (el.getAttribute("download")) return;
+
+
+    // Ignore if tag has
+    // 1. "download" attribute
+    // 2. rel="external" attribute
+    if (el.getAttribute('download') || el.getAttribute('rel') === 'external') return;
 
     // ensure non-hash for the same path
     var link = el.getAttribute('href');
-    if (el.pathname === location.pathname && (el.hash || '#' === link)) return;
+    if (!hashbang && el.pathname === location.pathname && (el.hash || '#' === link)) return;
+
+
 
     // Check for mailto: in the href
-    if (link && link.indexOf("mailto:") > -1) return;
+    if (link && link.indexOf('mailto:') > -1) return;
 
     // check target
     if (el.target) return;
 
     // x-origin
     if (!sameOrigin(el.href)) return;
+
+
 
     // rebuild path
     var path = el.pathname + el.search + (el.hash || '');
@@ -1407,6 +1462,9 @@ process.chdir = function (dir) {
     var orig = path;
 
     path = path.replace(base, '');
+    if (hashbang) path = path.replace('#!', '');
+
+
 
     if (base && orig === path) return;
 
@@ -1420,9 +1478,7 @@ process.chdir = function (dir) {
 
   function which(e) {
     e = e || window.event;
-    return null === e.which
-      ? e.button
-      : e.which;
+    return null === e.which ? e.button : e.which;
   }
 
   /**
@@ -1441,9 +1497,9 @@ process.chdir = function (dir) {
 var isArray = require('isarray');
 
 /**
- * Expose `pathtoRegexp`.
+ * Expose `pathToRegexp`.
  */
-module.exports = pathtoRegexp;
+module.exports = pathToRegexp;
 
 /**
  * The main path matching regexp utility.
@@ -1451,9 +1507,8 @@ module.exports = pathtoRegexp;
  * @type {RegExp}
  */
 var PATH_REGEXP = new RegExp([
-  // Match already escaped characters that would otherwise incorrectly appear
-  // in future matches. This allows the user to escape special characters that
-  // shouldn't be transformed.
+  // Match escaped characters that would otherwise appear in future matches.
+  // This allows the user to escape special characters that won't transform.
   '(\\\\.)',
   // Match Express-style parameters and un-named parameters with a prefix
   // and optional suffixes. Matches appear as:
@@ -1461,7 +1516,7 @@ var PATH_REGEXP = new RegExp([
   // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?"]
   // "/route(\\d+)" => [undefined, undefined, undefined, "\d+", undefined]
   '([\\/.])?(?:\\:(\\w+)(?:\\(((?:\\\\.|[^)])*)\\))?|\\(((?:\\\\.|[^)])*)\\))([+*?])?',
-  // Match regexp special characters that should always be escaped.
+  // Match regexp special characters that are always escaped.
   '([.+*?=^!:${}()[\\]|\\/])'
 ].join('|'), 'g');
 
@@ -1484,76 +1539,78 @@ function escapeGroup (group) {
  */
 function attachKeys (re, keys) {
   re.keys = keys;
-
   return re;
-};
+}
 
 /**
- * Normalize the given path string, returning a regular expression.
+ * Get the flags for a regexp from the options.
  *
- * An empty array should be passed in, which will contain the placeholder key
- * names. For example `/user/:id` will then contain `["id"]`.
+ * @param  {Object} options
+ * @return {String}
+ */
+function flags (options) {
+  return options.sensitive ? '' : 'i';
+}
+
+/**
+ * Pull out keys from a regexp.
  *
- * @param  {(String|RegExp|Array)} path
- * @param  {Array}                 keys
- * @param  {Object}                options
+ * @param  {RegExp} path
+ * @param  {Array}  keys
  * @return {RegExp}
  */
-function pathtoRegexp (path, keys, options) {
-  if (!isArray(keys)) {
-    options = keys;
-    keys = null;
+function regexpToRegexp (path, keys) {
+  // Use a negative lookahead to match only capturing groups.
+  var groups = path.source.match(/\((?!\?)/g);
+
+  if (groups) {
+    for (var i = 0; i < groups.length; i++) {
+      keys.push({
+        name:      i,
+        delimiter: null,
+        optional:  false,
+        repeat:    false
+      });
+    }
   }
 
-  keys = keys || [];
-  options = options || {};
+  return attachKeys(path, keys);
+}
 
-  var strict = options.strict;
-  var end = options.end !== false;
-  var flags = options.sensitive ? '' : 'i';
+/**
+ * Transform an array into a regexp.
+ *
+ * @param  {Array}  path
+ * @param  {Array}  keys
+ * @param  {Object} options
+ * @return {RegExp}
+ */
+function arrayToRegexp (path, keys, options) {
+  var parts = [];
+
+  for (var i = 0; i < path.length; i++) {
+    parts.push(pathToRegexp(path[i], keys, options).source);
+  }
+
+  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options));
+  return attachKeys(regexp, keys);
+}
+
+/**
+ * Replace the specific tags with regexp strings.
+ *
+ * @param  {String} path
+ * @param  {Array}  keys
+ * @return {String}
+ */
+function replacePath (path, keys) {
   var index = 0;
 
-  if (path instanceof RegExp) {
-    // Match all capturing groups of a regexp.
-    var groups = path.source.match(/\((?!\?)/g);
-
-    // Map all the matches to their numeric indexes and push into the keys.
-    if (groups) {
-      for (var i = 0; i < groups.length; i++) {
-        keys.push({
-          name:      i,
-          delimiter: null,
-          optional:  false,
-          repeat:    false
-        });
-      }
-    }
-
-    // Return the source back to the user.
-    return attachKeys(path, keys);
-  }
-
-  // Map array parts into regexps and return their source. We also pass
-  // the same keys and options instance into every generation to get
-  // consistent matching groups before we join the sources together.
-  if (isArray(path)) {
-    var parts = [];
-
-    for (var i = 0; i < path.length; i++) {
-      parts.push(pathtoRegexp(path[i], keys, options).source);
-    }
-    // Generate a new regexp instance by joining all the parts together.
-    return attachKeys(new RegExp('(?:' + parts.join('|') + ')', flags), keys);
-  }
-
-  // Alter the path string into a usable regexp.
-  path = path.replace(PATH_REGEXP, function (match, escaped, prefix, key, capture, group, suffix, escape) {
-    // Avoiding re-escaping escaped characters.
+  function replace (_, escaped, prefix, key, capture, group, suffix, escape) {
     if (escaped) {
       return escaped;
     }
 
-    // Escape regexp special characters.
     if (escape) {
       return '\\' + escape;
     }
@@ -1568,48 +1625,77 @@ function pathtoRegexp (path, keys, options) {
       repeat:    repeat
     });
 
-    // Escape the prefix character.
-    prefix = prefix ? '\\' + prefix : '';
-
-    // Match using the custom capturing group, or fallback to capturing
-    // everything up to the next slash (or next period if the param was
-    // prefixed with a period).
+    prefix = prefix ? ('\\' + prefix) : '';
     capture = escapeGroup(capture || group || '[^' + (prefix || '\\/') + ']+?');
 
-    // Allow parameters to be repeated more than once.
     if (repeat) {
       capture = capture + '(?:' + prefix + capture + ')*';
     }
 
-    // Allow a parameter to be optional.
     if (optional) {
       return '(?:' + prefix + '(' + capture + '))?';
     }
 
     // Basic parameter support.
     return prefix + '(' + capture + ')';
-  });
+  }
 
-  // Check whether the path ends in a slash as it alters some match behaviour.
-  var endsWithSlash = path[path.length - 1] === '/';
+  return path.replace(PATH_REGEXP, replace);
+}
 
-  // In non-strict mode we allow an optional trailing slash in the match. If
-  // the path to match already ended with a slash, we need to remove it for
-  // consistency. The slash is only valid at the very end of a path match, not
-  // anywhere in the middle. This is important for non-ending mode, otherwise
-  // "/test/" will match "/test//route".
+/**
+ * Normalize the given path string, returning a regular expression.
+ *
+ * An empty array can be passed in for the keys, which will hold the
+ * placeholder key descriptions. For example, using `/user/:id`, `keys` will
+ * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
+ *
+ * @param  {(String|RegExp|Array)} path
+ * @param  {Array}                 [keys]
+ * @param  {Object}                [options]
+ * @return {RegExp}
+ */
+function pathToRegexp (path, keys, options) {
+  keys = keys || [];
+
+  if (!isArray(keys)) {
+    options = keys;
+    keys = [];
+  } else if (!options) {
+    options = {};
+  }
+
+  if (path instanceof RegExp) {
+    return regexpToRegexp(path, keys, options);
+  }
+
+  if (isArray(path)) {
+    return arrayToRegexp(path, keys, options);
+  }
+
+  var strict = options.strict;
+  var end = options.end !== false;
+  var route = replacePath(path, keys);
+  var endsWithSlash = path.charAt(path.length - 1) === '/';
+
+  // In non-strict mode we allow a slash at the end of match. If the path to
+  // match already ends with a slash, we remove it for consistency. The slash
+  // is valid at the end of a path match, not in the middle. This is important
+  // in non-ending mode, where "/test/" shouldn't match "/test//route".
   if (!strict) {
-    path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
+    route = (endsWithSlash ? route.slice(0, -2) : route) + '(?:\\/(?=$))?';
   }
 
-  // In non-ending mode, we need prompt the capturing groups to match as much
-  // as possible by using a positive lookahead for the end or next path segment.
-  if (!end) {
-    path += strict && endsWithSlash ? '' : '(?=\\/|$)';
+  if (end) {
+    route += '$';
+  } else {
+    // In non-ending mode, we need the capturing groups to match as much as
+    // possible by using a positive lookahead to the end or next path segment.
+    route += strict && endsWithSlash ? '' : '(?=\\/|$)';
   }
 
-  return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
-};
+  return attachKeys(new RegExp('^' + route, flags(options)), keys);
+}
 
 },{"isarray":24}],24:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
