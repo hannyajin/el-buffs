@@ -5,6 +5,11 @@ var Nav = require('./Nav');
 var Footer = require('./Footer');
 var AccountBox = require('./AccountBox');
 
+var user = {
+  userName: 'Guest',
+  email: null,
+};
+
 var Router = React.createClass({
   getInitialState: function () {
     return {

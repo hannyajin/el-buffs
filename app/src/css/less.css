@@ -126,7 +126,7 @@ hr {
 .modal {
   z-index: 50;
 }
-#forget-modal, #message-modal {
+#forget-modal {
   margin: 0 auto;
   text-align: center;
   position: absolute;
@@ -252,11 +252,15 @@ nav ol li a:hover {
   cursor: pointer;
 }
 .accountBox {
+  font-size: 16px;
   position: relative;
   float: right;
   color: #EEE;
   padding: 0;
   margin: 0;
+}
+.accountBox div {
+  display: inline-block;
 }
 .accountBox a {
   color: #00b7ff;

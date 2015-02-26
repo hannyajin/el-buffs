@@ -2,27 +2,30 @@ var React = require('react');
 
 var Dropdown = require('./Dropdown');
 
-user = {
-  name: 'Dave'
-};
-user = null;
+var client = require('../client'); // not a react component
 
 var AccountBox = React.createClass({
   render: function () {
+    var user = client.getUser();
 
     if (!user) {
       // No user logged in
       return (
         <div className='accountBox'>
           <Dropdown />
+          <span>No user object found.</span>
         </div>
       );
     } else {
       // User logged in
       return (
         <div className='accountBox'>
-          <Dropdown />
-          <span>{user.name || 'No User Name Found'}</span>
+          <div className='userinfo'>
+            <div>
+              {user.username ? (user.username) : ('Guest')}
+            </div>
+          </div>
+            <Dropdown className='dropdown' />
         </div>
       );
     }

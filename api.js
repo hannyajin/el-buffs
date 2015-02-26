@@ -14,6 +14,7 @@ function api (app) {
   var jwt = require('jsonwebtoken');
   var tokenSecret = 'pineapple';
 
+  // password salt
   var salt = 'cute_giraffes';
 
   function log(str) {
@@ -43,6 +44,31 @@ function api (app) {
     });
   }; // authenticate
 
+  app.post('/token', function (req, res, next) {
+    console.log('IN POST TOKEN');
+    var json = req.body;
+
+    var user =  tokenStore[json.token];
+    if (user) {
+      console.log('Token Found: ' + user);
+
+      // send the user data back to the client
+      // TODO check for expiration date etc
+      var data = {
+        username: user.username,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        comments: user.comments,
+        clouds: user.clouds,
+      };
+      return res.status(200).json(user);
+    } else {
+      // no such token identified for a user
+      console.log('No Token Found');
+      return res.status(400);
+    }
+  });
+
   app.post('/login', function (req, res, next) {
     console.log('IN POST LOGIN');
     console.log(req.body);
@@ -57,7 +83,6 @@ function api (app) {
         });
       }
 
-
       // user authenticated
       var token = jwt.sign({username: user.username}, tokenSecret);
       if (tokenSecret[token]) {
@@ -68,7 +93,13 @@ function api (app) {
         tokenStore[token] = user;
       }
       console.log("User ["+ (user.email || user.username) +"] has logged in successfully!");
-      return res.status(200).json({token: token});
+
+      var userData = {
+        email: user.email,
+        username: user.username,
+      }
+
+      return res.status(200).json({token: token, userData: userData});
     });
   }); // login
 

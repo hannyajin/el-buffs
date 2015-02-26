@@ -1,10 +1,27 @@
+// Client API
 var base_url = location.protocol + "//" + location.hostname + ":" + location.port + "/";
 
-var token = null;
+// client info
+var token = null; // client token (logged in)
+
+
+user = {
+  username: null,
+  email: null,
+  lastlogin: null,
+};
 
 var client = {
   setToken: function (_token) {
     token = _token;
+  },
+
+  setUser: function(usr) {
+    user = usr;
+  },
+
+  getUser: function() {
+    return user;
   },
 
   send: function (url, data, done, fail) {
@@ -30,7 +47,15 @@ var client = {
       contentType: 'application/json; charset=utf-8',
       dataType: 'json'
     })
-      .done(done).fail(fail);
+      .done(function(data, status, xhr) {
+        token = data.token;
+        user = data.userData;
+        
+        // save token into localStorage
+        localStorage.setItem("token", token);
+
+        done(data, status, xhr);
+      }).fail(fail);
   },
 
   register: function (data, done, fail) {
@@ -45,5 +70,24 @@ var client = {
   }
 }
 
+// get token from localStorage
+$(function(){
+  console.log("-- IN TOKEN SETUP --");
+
+  var i = localStorage.getItem("token");
+  if (i) {
+    token = i;
+    var data = {token: token}
+    client.send('token', JSON.stringify(data), function doneToken(data) {
+      console.log("Token Success: " + data);
+      user.username = data.username;
+      user.email = data.email;
+    }, function failToken() {
+      console.log("Token Fail");
+    });
+  } else {
+    console.log("-- No Token in Local Storage --");
+  }
+});
 
 module.exports = client;

@@ -11,6 +11,7 @@ var utils = require('./utils');
 var Router = require('./components/Router');
 
 var HomePage = require('./pages/HomePage');
+var DashboardPage = require('./pages/DashboardPage');
 var AboutPage = require('./pages/AboutPage');
 var QueryPage = require('./pages/QueryPage');
 var UsersPage = require('./pages/UsersPage');
@@ -24,6 +25,7 @@ var RegisteredPage = require('./pages/RegisteredPage');
 
 var routes = [
   ['/', HomePage],
+  ['/dashboard', DashboardPage],
   ['/about', AboutPage],
   ['/users', UsersPage],
   ['/users/:id', UsersPage],

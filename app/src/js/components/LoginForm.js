@@ -29,7 +29,7 @@ var LoginForm = React.createClass({
       }, function done (data, status, xhr) {
         client.setToken(data.token);
         console.log("TOKEN: " + data.token);
-        utils.navigate('/');
+        utils.navigate('/dashboard');
       }, function fail (xhr, status, err) {
         //alert('login failed: ' + status);
         console.log("LOGIN failed. No such user.")
