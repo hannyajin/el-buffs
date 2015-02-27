@@ -13,7 +13,6 @@ var AccountBox = React.createClass({
       return (
         <div className='accountBox'>
           <Dropdown />
-          <span>No user object found.</span>
         </div>
       );
     } else {
@@ -25,7 +24,7 @@ var AccountBox = React.createClass({
               {user.username ? (user.username) : ('Guest')}
             </div>
           </div>
-            <Dropdown className='dropdown' />
+          <Dropdown className='dropdown' />
         </div>
       );
     }

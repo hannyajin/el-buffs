@@ -5,7 +5,7 @@ var client = require('../client');
 var utils = require('../utils');
 var text = utils.generateIpsum(50);
 
-var cloud = require('../components/cloud');
+var CloudList = require('../components/CloudList');
 
 var DashboardPage = React.createClass({
   render: function () {
@@ -17,7 +17,7 @@ var DashboardPage = React.createClass({
             <div className='six columns'>
                 <h1>Clouds</h1>
                 <div>
-                  {text}
+                  <CloudList />
                 </div>
             </div>
 

@@ -4,16 +4,21 @@ var base_url = location.protocol + "//" + location.hostname + ":" + location.por
 // client info
 var token = null; // client token (logged in)
 
-
+// user data
 user = {
+  token: null,
+
   username: null,
   email: null,
   lastlogin: null,
+
+  clouds: [],
+  comments: [],
 };
 
 var client = {
-  setToken: function (_token) {
-    token = _token;
+  setToken: function (tkn) {
+    user.token = tkn;
   },
 
   setUser: function(usr) {
@@ -48,11 +53,17 @@ var client = {
       dataType: 'json'
     })
       .done(function(data, status, xhr) {
-        token = data.token;
-        user = data.userData;
         
+        user.username = data.userData.username;
+        user.email = data.userData.email;
+        user.lastlogin = data.userData.lastlogin;
+
+        user.clouds = data.userData.clouds;
+        user.comments = data.userData.comments;
+        
+        user.token = data.token;
         // save token into localStorage
-        localStorage.setItem("token", token);
+        localStorage.setItem("token", user.token);
 
         done(data, status, xhr);
       }).fail(fail);
@@ -71,13 +82,13 @@ var client = {
 }
 
 // get token from localStorage
-$(function(){
+$(function() {
   console.log("-- IN TOKEN SETUP --");
 
   var i = localStorage.getItem("token");
   if (i) {
-    token = i;
-    var data = {token: token}
+    user.token = i;
+    var data = {token: user.token}
     client.send('token', JSON.stringify(data), function doneToken(data) {
       console.log("Token Success: " + data);
       user.username = data.username;
