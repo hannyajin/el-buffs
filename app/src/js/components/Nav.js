@@ -13,6 +13,9 @@ var Nav = React.createClass({
       },{
         url: '/about',
         text: 'About'
+      },{
+        url: '/dashboard',
+        text: 'Dashboard'
       }]
     }
   },

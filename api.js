@@ -207,6 +207,7 @@ function api (app) {
   var router = express.Router();
 
   router.get('/', function (req, res, next) {
+    // TODO this look good, add Authorization headers to client side
     var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
     req.token = token;
     req.user = tokenStore[token];
@@ -218,6 +219,18 @@ function api (app) {
       return res.status(200).json({username: req.user.username, email: req.user.email});
     }
     return res.status(400).json({error: 'Not logged in.'});
+  });
+
+  router.post('/clouds', function (req, res, next) {
+    var json = req.body;
+    if (user) {
+      var cloud = {
+        creator: user.username,
+      };
+    } else {
+      // not allowed to create cloud when not logged in
+      return res.status(405).json({message: 'Login to create a cloud'});
+    }
   });
 
   app.use('/api/', router);

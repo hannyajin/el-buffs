@@ -20,7 +20,7 @@ var CreateCloud = React.createClass({
 var CloudList = React.createClass({
   getInitialState: function() {
     var list = user.clouds;
-    if (list.length > 0) return null;
+    if (!list || list.length > 0) return null;
     // add some defaul temp clouds
     list.push({
       creator: 'Kalle',

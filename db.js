@@ -21,7 +21,7 @@ var userSchema = new Schema({
   password: String,
 
   clouds: [cloudSchema], // Cloud Ids
-  comments: [ { type: ObjectId, ref: 'Comment'} ],
+  comments: [ {type: ObjectId, ref: 'Comment'} ],
 
   emailVerified: Boolean,
 
