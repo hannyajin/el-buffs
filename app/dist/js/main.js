@@ -60,9 +60,28 @@ user = {
   comments: [],
 };
 
+function ajax (url, data, done, fail) {
+  $.ajax({
+    type: 'POST',
+    url: base_url + url,
+    data: data,
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json'
+  })
+  .done(done).fail(fail);
+};
+
 var client = {
   setToken: function (tkn) {
     user.token = tkn;
+  },
+
+  createCloud: function(title, value) {
+    ajax('createcloud', data,
+        function done (data, status, xhr) {
+        },
+        function fail () {
+        });
   },
 
   setUser: function(usr) {
@@ -71,17 +90,6 @@ var client = {
 
   getUser: function() {
     return user;
-  },
-
-  send: function (url, data, done, fail) {
-    $.ajax({
-      type: 'POST',
-      url: base_url + url,
-      data: data,
-      contentType: 'application/json; charset=utf-8',
-      dataType: 'json'
-    })
-      .done(done).fail(fail);
   },
 
   login: function (data, done, fail) {
@@ -212,12 +220,18 @@ var Cloud = require('./Cloud');
 
 var CreateCloud = React.createClass({displayName: "CreateCloud",
   handleClick: function() {
-    alert('Creating a cloud...');
+    var t = $('.createcloud_title').val();
+    var d = $('.createcloud_desc').val();
+    client.createCloud(t, d);
+    $('.createcloud_title').val('');
+    $('.createcloud_desc').val('');
   },
 
   render: function() {
     return (
       React.createElement("div", null, 
+        React.createElement("input", {type: "text", id: "createcloud_title"}), 
+        React.createElement("input", {type: "text", id: "createcloud_desc"}), 
         React.createElement("button", {type: "button", onClick: this.handleClick}, "Create Cloud")
       )
     );

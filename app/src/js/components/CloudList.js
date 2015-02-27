@@ -5,12 +5,18 @@ var Cloud = require('./Cloud');
 
 var CreateCloud = React.createClass({
   handleClick: function() {
-    alert('Creating a cloud...');
+    var t = $('.createcloud_title').val();
+    var d = $('.createcloud_desc').val();
+    client.createCloud(t, d);
+    $('.createcloud_title').val('');
+    $('.createcloud_desc').val('');
   },
 
   render: function() {
     return (
       <div>
+        <input type='text' id='createcloud_title' />
+        <input type='text' id='createcloud_desc' />
         <button type='button' onClick={this.handleClick}>Create Cloud</button>
       </div>
     );
