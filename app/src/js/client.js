@@ -43,6 +43,10 @@ var client = {
     return user;
   },
 
+  isLoggedIn: function() {
+    return (user.token != null);
+  },
+
   createCloud: function(title, value) {
     ajax('createcloud', data,
         function done (data, status, xhr) {

@@ -345,7 +345,7 @@ nav ol li a:hover {
   border-right: 8px solid transparent;
   border-bottom: 8px solid #263145;
   top: 0px;
-  right: 0px;
+  right: 1px;
 }
 .dropdown-block {
   position: absolute;
@@ -362,15 +362,14 @@ nav ol li a:hover {
   display: block;
 }
 .dropdown .dropdown-menu {
-  position: relative;
+  position: absolute;
   top: 30px;
   display: none;
-  position: absolute;
   background: #263145;
   float: left;
   z-index: 999;
   list-style: none;
-  left: -13px;
+  right: -32px;
   margin: 0;
 }
 .dropdown .dropdown-menu:hover {

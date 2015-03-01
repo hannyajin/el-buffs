@@ -452,7 +452,8 @@ nav {
   border-right: 8px solid transparent;
   border-bottom: 8px solid @dropdown_bg;
   top: 0px;
-  right: 0px;
+  //left: 62px;
+  right: 1px;
 }
 
 .dropdown-block {
@@ -473,17 +474,18 @@ nav {
 
 
   .dropdown-menu {
-    position: relative;
+    position: absolute;
 
     top: 30px;
     display: none;
-    position: absolute;
     background: @dropdown_bg;
     float: left;
     z-index: 999;
     list-style: none;
-    left: -13px;
+    //left: -13px;
+    right: -32px;
     margin: 0;
+    //width: 150px;
 
     &:hover {
       display: block;

@@ -87,6 +87,10 @@ var client = {
     return user;
   },
 
+  isLoggedIn: function() {
+    return (user.token != null);
+  },
+
   createCloud: function(title, value) {
     ajax('createcloud', data,
         function done (data, status, xhr) {
@@ -337,12 +341,46 @@ module.exports = CloudList;
 },{"../client":2,"./Cloud":4,"react":173}],6:[function(require,module,exports){
 var React = require('react');
 
+var client = require('../client');
+
 var Dropdown = React.createClass({displayName: "Dropdown",
   render: function () {
-    var list = ['Link','Link','Link'];
+    var list = null;
+
+    if (client.isLoggedIn()) {
+      list = [{
+        text: 'Dashboard',
+        handleClick: function() {
+          console.log("Dash clicked");
+        }
+      },{
+        text: 'Logout',
+        handleClick: function() {
+          console.log("Logout clicked");
+        }
+      }];
+    } else {
+      list = [{
+        text: 'Login',
+        handleClick: function() {
+          console.log("Login clicked");
+        }
+      },{
+        text: 'Register',
+        handleClick: function() {
+          console.log("Register clicked");
+        }
+      }]
+    }
 
     list = list.map(function (index) {
-      return React.createElement("li", null, React.createElement("a", null, index))
+      return (
+        React.createElement("li", null, 
+          React.createElement("a", {onClick: index.handleClick}, 
+            index.text
+          )
+        )
+      );
     });
 
     return (
@@ -366,7 +404,8 @@ var Dropdown = React.createClass({displayName: "Dropdown",
 });
 
 module.exports = Dropdown;
-},{"react":173}],7:[function(require,module,exports){
+
+},{"../client":2,"react":173}],7:[function(require,module,exports){
 var React = require('react');
 
 var Footer = React.createClass({displayName: "Footer",

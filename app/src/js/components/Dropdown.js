@@ -1,11 +1,45 @@
 var React = require('react');
 
+var client = require('../client');
+
 var Dropdown = React.createClass({
   render: function () {
-    var list = ['Link','Link','Link'];
+    var list = null;
+
+    if (client.isLoggedIn()) {
+      list = [{
+        text: 'Dashboard',
+        handleClick: function() {
+          console.log("Dash clicked");
+        }
+      },{
+        text: 'Logout',
+        handleClick: function() {
+          console.log("Logout clicked");
+        }
+      }];
+    } else {
+      list = [{
+        text: 'Login',
+        handleClick: function() {
+          console.log("Login clicked");
+        }
+      },{
+        text: 'Register',
+        handleClick: function() {
+          console.log("Register clicked");
+        }
+      }]
+    }
 
     list = list.map(function (index) {
-      return <li><a>{index}</a></li>
+      return (
+        <li>
+          <a onClick={index.handleClick}>
+            {index.text}
+          </a>
+        </li>
+      );
     });
 
     return (
