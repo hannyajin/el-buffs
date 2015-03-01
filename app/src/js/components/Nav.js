@@ -2,26 +2,48 @@ var React = require('react');
 
 var Logo = require('./Logo');
 var utils = require('../utils');
+var client = require('../client');
+
+function getState() {
+  var items = null;
+  if (!client.isLoggedIn()) {
+    items = [{
+      url: '/',
+      text: 'Home'
+    },{
+      url: '/about',
+      text: 'About'
+    },{
+      url: '/login',
+      text: 'Login'
+    }];
+  } else {
+    items = [{
+      url: '/',
+      text: 'Home'
+    },{
+      url: '/about',
+      text: 'About'
+    },{
+      url: '/dashboard',
+      text: 'Dashboard'
+    }]
+  }
+
+  return {
+    active: 0,
+    navItems: items
+  }
+}
 
 var Nav = React.createClass({
   getInitialState: function () {
-    return {
-      active: 0,
-      navItems: [{
-        url: '/',
-        text: 'Home'
-      },{
-        url: '/about',
-        text: 'About'
-      },{
-        url: '/dashboard',
-        text: 'Dashboard'
-      }]
-    }
+    return getState();
   },
 
   render: function () {
     var self = this;
+    this.state = getState();
     var components = this.state.navItems.map(function (item, index) {
       return <NavItem index={index}
         active={self.props.pathname === item.url} url={item.url} text={item.text} />

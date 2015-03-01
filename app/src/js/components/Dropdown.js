@@ -1,6 +1,7 @@
 var React = require('react');
 
 var client = require('../client');
+var utils = require('../utils');
 
 var Dropdown = React.createClass({
   render: function () {
@@ -10,12 +11,13 @@ var Dropdown = React.createClass({
       list = [{
         text: 'Dashboard',
         handleClick: function() {
-          console.log("Dash clicked");
+          utils.navigate('/dashboard');
         }
       },{
         text: 'Logout',
         handleClick: function() {
           console.log("Logout clicked");
+          client.logout();
         }
       }];
     } else {
@@ -23,11 +25,13 @@ var Dropdown = React.createClass({
         text: 'Login',
         handleClick: function() {
           console.log("Login clicked");
+          utils.navigate('/login');
         }
       },{
         text: 'Register',
         handleClick: function() {
           console.log("Register clicked");
+          utils.navigate('/register');
         }
       }]
     }

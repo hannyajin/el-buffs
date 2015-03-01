@@ -1,8 +1,13 @@
 // Client API
 var base_url = location.protocol + "//" + location.hostname + ":" + location.port + "/";
 var base_api_url = base_url + 'api/';
+
+
+var utils = require('./utils');
+
 // user data
 user = {
+  loggedIn: false,
   token: null,
 
   username: null,
@@ -44,7 +49,40 @@ var client = {
   },
 
   isLoggedIn: function() {
-    return (user.token != null);
+    return (user.token != null && user.loggedIn);
+  },
+
+  logout: function() {
+    if (user.token != null) {
+      utils.showMessage("Loggin out...", 'info');
+
+      function success (data, status, xhr) {
+        user.token = null;
+        user.loggedIn = false;
+        setTimeout(function() {
+          var msg = "You've successfully logged out";
+          utils.showMessage(data.message || msg, 'success');
+          utils.navigate('/');
+        }, 300);
+      }
+
+      function error (xhr, status, err) {
+        utils.showXHR(xhr);
+      }
+
+      ajax({
+        type: 'GET',
+        url: base_url + 'logout',
+        // data: JSON.stringify(data),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+
+        success: success,
+        error: error
+      });
+    } else {
+      utils.showMessage("You're not logged in.", 'info');
+    }
   },
 
   createCloud: function(title, value) {
@@ -73,6 +111,7 @@ var client = {
       // save token into localStorage
       localStorage.setItem("token", user.token);
 
+      user.loggedIn = true;
       console.log('Login Success, status: ' + status);
       done(data, status, xhr);
     };
@@ -138,10 +177,12 @@ $(function() {
       console.log("Token Success: " + data.username);
       user.username = data.username;
       user.email = user.email;
+      user.loggedIn = true;
     };
 
     function error(xhr, status, error) {
       console.log("Token Fail");
+      user.token = null;
     };
 
     // ask client info from server based on token
@@ -156,7 +197,8 @@ $(function() {
       error: error
     });
 
-  } else { 
+  } else {
+    user.token = null;
     // no saved local Token to use for auto login
     console.log("-- No Token in Local Storage --");
   }

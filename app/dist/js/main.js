@@ -45,8 +45,13 @@ React.render(React.createElement(Router, {routes: routes}), document.getElementB
 // Client API
 var base_url = location.protocol + "//" + location.hostname + ":" + location.port + "/";
 var base_api_url = base_url + 'api/';
+
+
+var utils = require('./utils');
+
 // user data
 user = {
+  loggedIn: false,
   token: null,
 
   username: null,
@@ -88,7 +93,40 @@ var client = {
   },
 
   isLoggedIn: function() {
-    return (user.token != null);
+    return (user.token != null && user.loggedIn);
+  },
+
+  logout: function() {
+    if (user.token != null) {
+      utils.showMessage("Loggin out...", 'info');
+
+      function success (data, status, xhr) {
+        user.token = null;
+        user.loggedIn = false;
+        setTimeout(function() {
+          var msg = "You've successfully logged out";
+          utils.showMessage(data.message || msg, 'success');
+          utils.navigate('/');
+        }, 300);
+      }
+
+      function error (xhr, status, err) {
+        utils.showXHR(xhr);
+      }
+
+      ajax({
+        type: 'GET',
+        url: base_url + 'logout',
+        // data: JSON.stringify(data),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+
+        success: success,
+        error: error
+      });
+    } else {
+      utils.showMessage("You're not logged in.", 'info');
+    }
   },
 
   createCloud: function(title, value) {
@@ -117,6 +155,7 @@ var client = {
       // save token into localStorage
       localStorage.setItem("token", user.token);
 
+      user.loggedIn = true;
       console.log('Login Success, status: ' + status);
       done(data, status, xhr);
     };
@@ -182,10 +221,12 @@ $(function() {
       console.log("Token Success: " + data.username);
       user.username = data.username;
       user.email = user.email;
+      user.loggedIn = true;
     };
 
     function error(xhr, status, error) {
       console.log("Token Fail");
+      user.token = null;
     };
 
     // ask client info from server based on token
@@ -200,7 +241,8 @@ $(function() {
       error: error
     });
 
-  } else { 
+  } else {
+    user.token = null;
     // no saved local Token to use for auto login
     console.log("-- No Token in Local Storage --");
   }
@@ -208,7 +250,7 @@ $(function() {
 
 module.exports = client;
 
-},{}],3:[function(require,module,exports){
+},{"./utils":23}],3:[function(require,module,exports){
 var React = require('react');
 
 var Dropdown = require('./Dropdown');
@@ -342,6 +384,7 @@ module.exports = CloudList;
 var React = require('react');
 
 var client = require('../client');
+var utils = require('../utils');
 
 var Dropdown = React.createClass({displayName: "Dropdown",
   render: function () {
@@ -351,12 +394,13 @@ var Dropdown = React.createClass({displayName: "Dropdown",
       list = [{
         text: 'Dashboard',
         handleClick: function() {
-          console.log("Dash clicked");
+          utils.navigate('/dashboard');
         }
       },{
         text: 'Logout',
         handleClick: function() {
           console.log("Logout clicked");
+          client.logout();
         }
       }];
     } else {
@@ -364,11 +408,13 @@ var Dropdown = React.createClass({displayName: "Dropdown",
         text: 'Login',
         handleClick: function() {
           console.log("Login clicked");
+          utils.navigate('/login');
         }
       },{
         text: 'Register',
         handleClick: function() {
           console.log("Register clicked");
+          utils.navigate('/register');
         }
       }]
     }
@@ -405,7 +451,7 @@ var Dropdown = React.createClass({displayName: "Dropdown",
 
 module.exports = Dropdown;
 
-},{"../client":2,"react":173}],7:[function(require,module,exports){
+},{"../client":2,"../utils":23,"react":173}],7:[function(require,module,exports){
 var React = require('react');
 
 var Footer = React.createClass({displayName: "Footer",
@@ -569,26 +615,48 @@ var React = require('react');
 
 var Logo = require('./Logo');
 var utils = require('../utils');
+var client = require('../client');
+
+function getState() {
+  var items = null;
+  if (!client.isLoggedIn()) {
+    items = [{
+      url: '/',
+      text: 'Home'
+    },{
+      url: '/about',
+      text: 'About'
+    },{
+      url: '/login',
+      text: 'Login'
+    }];
+  } else {
+    items = [{
+      url: '/',
+      text: 'Home'
+    },{
+      url: '/about',
+      text: 'About'
+    },{
+      url: '/dashboard',
+      text: 'Dashboard'
+    }]
+  }
+
+  return {
+    active: 0,
+    navItems: items
+  }
+}
 
 var Nav = React.createClass({displayName: "Nav",
   getInitialState: function () {
-    return {
-      active: 0,
-      navItems: [{
-        url: '/',
-        text: 'Home'
-      },{
-        url: '/about',
-        text: 'About'
-      },{
-        url: '/dashboard',
-        text: 'Dashboard'
-      }]
-    }
+    return getState();
   },
 
   render: function () {
     var self = this;
+    this.state = getState();
     var components = this.state.navItems.map(function (item, index) {
       return React.createElement(NavItem, {index: index, 
         active: self.props.pathname === item.url, url: item.url, text: item.text})
@@ -626,7 +694,7 @@ var NavItem = React.createClass({displayName: "NavItem",
 
 module.exports = Nav;
 
-},{"../utils":23,"./Logo":9,"react":173}],11:[function(require,module,exports){
+},{"../client":2,"../utils":23,"./Logo":9,"react":173}],11:[function(require,module,exports){
 var React = require('react');
 
 var utils = require('../utils');

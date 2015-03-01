@@ -83,9 +83,9 @@ function api (app) {
         });
       }
 
-      // user authenticated
+      // user logged in, create token authentication
       var token = jwt.sign({username: user.username}, tokenSecret);
-      if (tokenSecret[token]) {
+      if (tokenStore[token]) {
         // this shouldn't happen
         console.log("ERROR: 51:api.js - TOKEN ALREADY SIGNED!!!");
         return res.status(401).json({error: 'Incident has been reported.'});
@@ -181,20 +181,17 @@ function api (app) {
     console.log(req.body);
     var json = req.body;
 
-    var token = req.body.token;
-    var a = req.get('Authorization');
+    var token = req.get('Authorization') || req.body.token;
 
-    if (a) {
-      token = a.split(' ', 1)[1];
+    console.log('User Token: ' + token);
+
+    if (tokenStore[token]) {
+      delete tokenStore[token];
+
+      return res.status(200).json({message: 'Successfully logged out!'}).redirect('/');
     }
 
-    if (tokenSecret[token]) {
-      delete tokenSecret[token];
-
-      return res.status(200).json({message: 'Bye bye.'}).redirect('/');
-    }
-
-    return res.status(400).json({error: 'Not logged in.'});
+    return res.status(400).json({error: 'Not logged in.', message: 'You are not logged in'});
   }); // logout
 
   app.get('/activate/:id', function (req, res) {
@@ -209,16 +206,27 @@ function api (app) {
   });
 
 
-  /* API V0 */
+  /* API V0
+   * the api router under host/api/*
+   * These api calls requries the user to be logged in (valid token) */
   var router = express.Router();
 
+  // defines root middleware that handles/grabs the Authorization header
+  // from the request and adds into onto the request object for easy access
+  // in subsequent paths by calling next()
   router.get('/', function (req, res, next) {
     // TODO this look good, add Authorization headers to client side
     var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
     req.token = token;
     req.user = tokenStore[token];
     next();
-  })
+  });
+  router.post('*', function (req, res, next) {
+    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
+    req.token = token;
+    req.user = tokenStore[token];
+    next();
+  });
 
   router.get('/users/:me', function (req, res) {
     if (req.user) {
