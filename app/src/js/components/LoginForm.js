@@ -20,11 +20,12 @@ var LoginForm = React.createClass({
 
     if (email.val().indexOf('@') < 0 || email.val().length < 3
         || pass.val().length < 1) {
+      utils.showMessage("Form is faulty.", 'warning');
       utils.animateOnce('#loginContainer', 'animated shake');
     } else {
       // xhr post login
       client.login({
-        username: email.val(),
+        email: email.val(),
         password: pass.val()
       }, function done (data, status, xhr) {
         client.setToken(data.token);
@@ -32,7 +33,8 @@ var LoginForm = React.createClass({
         utils.navigate('/dashboard');
       }, function fail (xhr, status, err) {
         //alert('login failed: ' + status);
-        console.log("LOGIN failed. No such user.")
+        console.log("LOGIN failed. No such user.");
+        utils.showXHR(xhr);
         utils.animateOnce('#loginContainer', 'animated shake');
       });
     }

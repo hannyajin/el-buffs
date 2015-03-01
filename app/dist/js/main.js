@@ -119,6 +119,7 @@ var client = {
 
     function error(xhr, status, err) {
       console.log('Login Failed, status: ' + status);
+      fail(xhr, status, err);
     };
 
     ajax({
@@ -134,14 +135,30 @@ var client = {
   },
 
   register: function (data, done, fail) {
-    $.ajax({
+    console.log('in CLIENT API: Register!');
+    console.log('data.username: ' + data.username);
+    console.log('data.password: ' + data.password);
+
+    function success (data, status, xhr) {
+      console.log('Registration Success, status: ' + status);
+      done(data, status, xhr);
+    };
+
+    function error (xhr, status, err) {
+      console.log('Registration Failed, status: ' + status);
+      fail(xhr, status, err);
+    };
+
+    ajax({
       type: 'POST',
       url: base_url + 'register',
       data: JSON.stringify(data),
       contentType: 'application/json; charset=utf-8',
-      dataType: 'json'
-    })
-      .done(done).fail(fail);
+      dataType: 'json',
+
+      success: success,
+      error: error
+    });
   }
 }
 
@@ -152,13 +169,13 @@ $(function() {
   console.log("-- IN TOKEN SETUP --");
 
   // get token from localStorage
-  var i = localStorage.getItem("token");
-  if (i) {
-    user.token = i;
+  var tkn = localStorage.getItem("token");
+  if (tkn) {
+    user.token = tkn;
     var data = {token: user.token}
 
     function success(data, status, xhr) {
-      console.log("Token Success: " + data);
+      console.log("Token Success: " + data.username);
       user.username = data.username;
       user.email = user.email;
     };
@@ -398,11 +415,12 @@ var LoginForm = React.createClass({displayName: "LoginForm",
 
     if (email.val().indexOf('@') < 0 || email.val().length < 3
         || pass.val().length < 1) {
+      utils.showMessage("Form is faulty.", 'warning');
       utils.animateOnce('#loginContainer', 'animated shake');
     } else {
       // xhr post login
       client.login({
-        username: email.val(),
+        email: email.val(),
         password: pass.val()
       }, function done (data, status, xhr) {
         client.setToken(data.token);
@@ -410,7 +428,8 @@ var LoginForm = React.createClass({displayName: "LoginForm",
         utils.navigate('/dashboard');
       }, function fail (xhr, status, err) {
         //alert('login failed: ' + status);
-        console.log("LOGIN failed. No such user.")
+        console.log("LOGIN failed. No such user.");
+        utils.showXHR(xhr);
         utils.animateOnce('#loginContainer', 'animated shake');
       });
     }
@@ -585,6 +604,7 @@ var RegisterForm = React.createClass({displayName: "RegisterForm",
 
     if (email.val().indexOf('@') < 0 || email.val().length < 3
         || pass.val().length < 1 || pass.val() != pass2.val() || username.val().length < 1) {
+      utils.showMessage("Error: form is faulty.", "warning");
       utils.animateOnce('#registerContainer', 'animated shake');
     } else {
       // xhr post register
@@ -599,7 +619,8 @@ var RegisterForm = React.createClass({displayName: "RegisterForm",
         console.log("Registered. Verify email sent.");
         utils.navigate('/registered');
         //self.showMessage('show');
-      }, function (xhr, status, err) {
+      }, function (xhr, status, err) { // error
+        utils.showXHR(xhr);
         utils.animateOnce('#registerContainer', 'animated shake');
       });
     }
@@ -668,6 +689,7 @@ var RegisterForm = React.createClass({displayName: "RegisterForm",
 });
 
 module.exports = RegisterForm;
+
 },{"../client":2,"../utils":23,"react":173}],12:[function(require,module,exports){
 var React = require('react');
 var page = require('page');
@@ -1036,7 +1058,6 @@ var utils = (function() {
   };
 
   var ipsums = text.split(' ');
-
   function generateIpsum(num) {
     var str = 'Lorem ipsum dolor sit amet, ';
     var t = (Math.random() * ipsums.length) | 0;
@@ -1049,17 +1070,70 @@ var utils = (function() {
     return str;
   };
 
+  var msgEl = null;
+  function showMessage (message, type) {
+    console.log('INSIDE SHOWMESSAGE ----');
+
+    var msg = message;
+    var timeout = 2200;
+    if (msgEl) {
+      msg = msgEl.lastMsg + "<br>" +  msg;
+      timeout = msgEl._timeout + 200;
+      msgEl.remove();
+      msgEl = null;
+    }
+    if (timeout > 3000)
+      timeout = 3000;
+
+    var cls = type || 'info';
+    var str = '<div class="'+cls+'">' + msg + '</div>';
+    var el = $(str);
+    el.lastMsg = message;
+    el._timeout = timeout;
+    $('#view').prepend(el);
+
+    // center showmessage element
+    var wi = window.innerWidth;
+    var left = (wi / 2) - (el.width() / 2) - 20;
+    el.css({"left": left});
+
+    el.slideDown(400).delay(timeout).slideUp(200,function(){
+      var self = $(this);
+      if (msgEl == el) {
+        msgEl = null;
+      }
+      if (self != null) {
+        self.remove();
+      }
+    });
+
+    msgEl = el;
+  };
+
+  function showXHR(xhr) {
+    var json = $.parseJSON(xhr.responseText);
+    var error = json.error || json.err;
+    var message = json.message || json.msg || json.info;
+
+    if (message) {
+      showMessage("Message: " + message, 'warning');
+    } else 
+      if (error) {
+        showMessage("Error: " + error, 'error');
+      }
+  };
+
   return {
     animateOnce: animateOnce,
     navigate: navigate,
     generateIpsum: generateIpsum,
-    testuser: {
-      name: 'Dave'
-    }
+    showMessage: showMessage,
+    showXHR: showXHR,
   }
 })();
 
 module.exports = utils;
+
 },{"page":25}],24:[function(require,module,exports){
 // shim for using process in browser
 

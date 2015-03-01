@@ -14,6 +14,7 @@ var RegisterForm = React.createClass({
 
     if (email.val().indexOf('@') < 0 || email.val().length < 3
         || pass.val().length < 1 || pass.val() != pass2.val() || username.val().length < 1) {
+      utils.showMessage("Error: form is faulty.", "warning");
       utils.animateOnce('#registerContainer', 'animated shake');
     } else {
       // xhr post register
@@ -28,7 +29,8 @@ var RegisterForm = React.createClass({
         console.log("Registered. Verify email sent.");
         utils.navigate('/registered');
         //self.showMessage('show');
-      }, function (xhr, status, err) {
+      }, function (xhr, status, err) { // error
+        utils.showXHR(xhr);
         utils.animateOnce('#registerContainer', 'animated shake');
       });
     }

@@ -55,7 +55,6 @@ var utils = (function() {
   };
 
   var ipsums = text.split(' ');
-
   function generateIpsum(num) {
     var str = 'Lorem ipsum dolor sit amet, ';
     var t = (Math.random() * ipsums.length) | 0;
@@ -68,13 +67,65 @@ var utils = (function() {
     return str;
   };
 
+  var msgEl = null;
+  function showMessage (message, type) {
+    console.log('INSIDE SHOWMESSAGE ----');
+
+    var msg = message;
+    var timeout = 2200;
+    if (msgEl) {
+      msg = msgEl.lastMsg + "<br>" +  msg;
+      timeout = msgEl._timeout + 200;
+      msgEl.remove();
+      msgEl = null;
+    }
+    if (timeout > 3000)
+      timeout = 3000;
+
+    var cls = type || 'info';
+    var str = '<div class="'+cls+'">' + msg + '</div>';
+    var el = $(str);
+    el.lastMsg = message;
+    el._timeout = timeout;
+    $('#view').prepend(el);
+
+    // center showmessage element
+    var wi = window.innerWidth;
+    var left = (wi / 2) - (el.width() / 2) - 20;
+    el.css({"left": left});
+
+    el.slideDown(400).delay(timeout).slideUp(200,function(){
+      var self = $(this);
+      if (msgEl == el) {
+        msgEl = null;
+      }
+      if (self != null) {
+        self.remove();
+      }
+    });
+
+    msgEl = el;
+  };
+
+  function showXHR(xhr) {
+    var json = $.parseJSON(xhr.responseText);
+    var error = json.error || json.err;
+    var message = json.message || json.msg || json.info;
+
+    if (message) {
+      showMessage("Message: " + message, 'warning');
+    } else 
+      if (error) {
+        showMessage("Error: " + error, 'error');
+      }
+  };
+
   return {
     animateOnce: animateOnce,
     navigate: navigate,
     generateIpsum: generateIpsum,
-    testuser: {
-      name: 'Dave'
-    }
+    showMessage: showMessage,
+    showXHR: showXHR,
   }
 })();
 

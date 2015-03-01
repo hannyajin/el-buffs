@@ -21,8 +21,8 @@ function api (app) {
     console.log(str);
   }; // log
 
-  function authenticate (username, password, done) {
-    db.models.User.findOne( function (err, doc) {
+  function authenticate (email, password, done) {
+    db.models.User.findOne({email: email}, function (err, doc) {
       if (err) {
         return done(err);
       }
@@ -35,7 +35,7 @@ function api (app) {
             return done(null, false, {id: 1, message: 'Email not verified.'});
           }
         } else {
-          return done(null, false, {id: 2, message: 'Incorrect Password. ['+ doc.password +'] - ['+ sha1(password + salt) +']'});
+          return done(null, false, {id: 2, message: 'Incorrect Password.', error: 'Incorrect Password. ['+ doc.password +'] - ['+ sha1(password + salt) +']'});
         }
       } else {
         // not found
@@ -74,12 +74,12 @@ function api (app) {
     console.log(req.body);
     var json = req.body;
 
-    authenticate(json.username, json.password, function (err, user, info) {
+    authenticate(json.email, json.password, function (err, user, info) {
       if (err) { return next(err); }
       if (!user) {
         console.log('!user: ' + info.message || 'No user found.');
         return res.status(401).json({
-          error: info.message || 'No such user found.', message: info.message, id: info.id
+          error: info.message || 'No such user found.', message: info.message || 'No such user found.', id: info.id
         });
       }
 

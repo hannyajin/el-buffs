@@ -75,6 +75,7 @@ var client = {
 
     function error(xhr, status, err) {
       console.log('Login Failed, status: ' + status);
+      fail(xhr, status, err);
     };
 
     ajax({
@@ -90,14 +91,30 @@ var client = {
   },
 
   register: function (data, done, fail) {
-    $.ajax({
+    console.log('in CLIENT API: Register!');
+    console.log('data.username: ' + data.username);
+    console.log('data.password: ' + data.password);
+
+    function success (data, status, xhr) {
+      console.log('Registration Success, status: ' + status);
+      done(data, status, xhr);
+    };
+
+    function error (xhr, status, err) {
+      console.log('Registration Failed, status: ' + status);
+      fail(xhr, status, err);
+    };
+
+    ajax({
       type: 'POST',
       url: base_url + 'register',
       data: JSON.stringify(data),
       contentType: 'application/json; charset=utf-8',
-      dataType: 'json'
-    })
-      .done(done).fail(fail);
+      dataType: 'json',
+
+      success: success,
+      error: error
+    });
   }
 }
 
@@ -108,13 +125,13 @@ $(function() {
   console.log("-- IN TOKEN SETUP --");
 
   // get token from localStorage
-  var i = localStorage.getItem("token");
-  if (i) {
-    user.token = i;
+  var tkn = localStorage.getItem("token");
+  if (tkn) {
+    user.token = tkn;
     var data = {token: user.token}
 
     function success(data, status, xhr) {
-      console.log("Token Success: " + data);
+      console.log("Token Success: " + data.username);
       user.username = data.username;
       user.email = user.email;
     };
