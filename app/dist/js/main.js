@@ -44,10 +44,7 @@ React.render(React.createElement(Router, {routes: routes}), document.getElementB
 },{"./components/Router":12,"./pages/AboutPage":13,"./pages/CodePage":14,"./pages/DashboardPage":15,"./pages/HomePage":16,"./pages/LoginPage":17,"./pages/PageNotFound":18,"./pages/QueryPage":19,"./pages/RegisterPage":20,"./pages/RegisteredPage":21,"./pages/UsersPage":22,"./utils":23,"page":25,"react":173}],2:[function(require,module,exports){
 // Client API
 var base_url = location.protocol + "//" + location.hostname + ":" + location.port + "/";
-
-// client info
-var token = null; // client token (logged in)
-
+var base_api_url = base_url + 'api/';
 // user data
 user = {
   token: null,
@@ -60,28 +57,26 @@ user = {
   comments: [],
 };
 
-function ajax (url, data, done, fail) {
-  $.ajax({
-    type: 'POST',
-    url: base_url + url,
-    data: data,
-    contentType: 'application/json; charset=utf-8',
-    dataType: 'json'
-  })
-  .done(done).fail(fail);
+// Ajax Json Request
+function ajax (xhr) {
+  xhr.headers = xhr.headers || {};
+  // add Authorization header to headers
+  xhr.headers['Authorization'] = user.token;
+  $.ajax(xhr);
+};
+
+var reqs = {
+  json: function (xhr) {
+    xhr.contentType = 'application/json; charset=utf-8';
+    xhr.dataType = 'json';
+
+    ajax(xhr);
+  },
 };
 
 var client = {
   setToken: function (tkn) {
     user.token = tkn;
-  },
-
-  createCloud: function(title, value) {
-    ajax('createcloud', data,
-        function done (data, status, xhr) {
-        },
-        function fail () {
-        });
   },
 
   setUser: function(usr) {
@@ -92,33 +87,50 @@ var client = {
     return user;
   },
 
+  createCloud: function(title, value) {
+    ajax('createcloud', data,
+        function done (data, status, xhr) {
+        },
+        function fail () {
+        });
+  },
+
   login: function (data, done, fail) {
     console.log('in CLIENT API: login!');
     console.log('data.username: ' + data.username);
     console.log('data.password: ' + data.password);
 
-    $.ajax({
+    function success(data, status, xhr) {
+      user.username = data.userData.username;
+
+      user.email = data.userData.email;
+      user.lastlogin = data.userData.lastlogin;
+
+      user.clouds = data.userData.clouds;
+      user.comments = data.userData.comments;
+
+      user.token = data.token;
+      // save token into localStorage
+      localStorage.setItem("token", user.token);
+
+      console.log('Login Success, status: ' + status);
+      done(data, status, xhr);
+    };
+
+    function error(xhr, status, err) {
+      console.log('Login Failed, status: ' + status);
+    };
+
+    ajax({
       type: 'POST',
       url: base_url + 'login',
       data: JSON.stringify(data),
       contentType: 'application/json; charset=utf-8',
-      dataType: 'json'
-    })
-      .done(function(data, status, xhr) {
-        
-        user.username = data.userData.username;
-        user.email = data.userData.email;
-        user.lastlogin = data.userData.lastlogin;
+      dataType: 'json',
 
-        user.clouds = data.userData.clouds;
-        user.comments = data.userData.comments;
-        
-        user.token = data.token;
-        // save token into localStorage
-        localStorage.setItem("token", user.token);
-
-        done(data, status, xhr);
-      }).fail(fail);
+      success: success,
+      error: error
+    });
   },
 
   register: function (data, done, fail) {
@@ -133,22 +145,42 @@ var client = {
   }
 }
 
-// get token from localStorage
+
+// at page load get saved token from localStorage
+// and ask for client data from server
 $(function() {
   console.log("-- IN TOKEN SETUP --");
 
+  // get token from localStorage
   var i = localStorage.getItem("token");
   if (i) {
     user.token = i;
     var data = {token: user.token}
-    client.send('token', JSON.stringify(data), function doneToken(data) {
+
+    function success(data, status, xhr) {
       console.log("Token Success: " + data);
       user.username = data.username;
-      user.email = data.email;
-    }, function failToken() {
+      user.email = user.email;
+    };
+
+    function error(xhr, status, error) {
       console.log("Token Fail");
+    };
+
+    // ask client info from server based on token
+    ajax({
+      type: 'POST',
+      url: base_url + 'token',
+      data: JSON.stringify(data),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+
+      success: success,
+      error: error
     });
-  } else {
+
+  } else { 
+    // no saved local Token to use for auto login
     console.log("-- No Token in Local Storage --");
   }
 });
