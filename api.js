@@ -209,45 +209,85 @@ function api (app) {
   /* API V0
    * the api router under host/api/*
    * These api calls requries the user to be logged in (valid token) */
-  var router = express.Router();
+  var apirouter = express.Router();
 
   // defines root middleware that handles/grabs the Authorization header
   // from the request and adds into onto the request object for easy access
   // in subsequent paths by calling next()
-  router.get('/', function (req, res, next) {
-    // TODO this look good, add Authorization headers to client side
-    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
+  apirouter.use('/', function (req, res, next) {
+    console.log('(((ROOT)) In api root middleware');
+    var token = req.get('Authorization') || req.body.token;
     req.token = token;
     req.user = tokenStore[token];
-    next();
-  });
-  router.post('*', function (req, res, next) {
-    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
-    req.token = token;
-    req.user = tokenStore[token];
+    console.log('   TOKEN: ' + token);
     next();
   });
 
-  router.get('/users/:me', function (req, res) {
+//  apirouter.get('*', function (req, res, next) {
+//    // TODO this look good, add Authorization headers to client side
+//    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
+//    req.token = token;
+//    req.user = tokenStore[token];
+//    next();
+//  });
+//  apirouter.post('*', function (req, res, next) {
+//    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
+//    req.token = token;
+//    req.user = tokenStore[token];
+//    next();
+//  });
+
+  apirouter.get('/users/:me', function (req, res) {
     if (req.user) {
       return res.status(200).json({username: req.user.username, email: req.user.email});
     }
     return res.status(400).json({error: 'Not logged in.'});
   });
 
-  router.post('/clouds', function (req, res) {
+  apirouter.post('/clouds', function (req, res) {
+    console.log('IN API/CLOUDS POST');
+
     var json = req.body;
-    if (user) {
+
+    console.log('json: ' + json);
+
+    if (req.user) {
       var cloud = {
-        creator: user.username,
+        creator: req.user._id,
+        cloud: json.parentCloud, // null for no parent
+        title: json.title,
+        desc: json.desc,
+        tags: json.tags,
+
+        members: json.members,
+        invites: json.invites,
       };
+
+      console.log('creating cloud...');
+      db.models.Cloud.create( cloud, function (err, doc) {
+        if (err) {
+          console.log('cloud creation error: ' + err);
+          return res.status(500).json({
+            error: "Internal server error, couldn't create cloud",
+            message: "Internal server error 500, failed to create cloud."
+          });
+        }
+        // else saved
+        console.log('cloud created: ' + doc);
+        return res.status(201).json({
+          message: "Cloud was Successfully created!"
+        });
+      });
     } else {
       // not allowed to create cloud when not logged in
-      return res.status(405).json({message: 'Login to create a cloud'});
+      return res.status(405).json({
+        error: 'Cloud creation required login',
+        message: 'You need to be logged in to create a cloud'
+      });
     }
   });
 
-  app.use('/api/', router);
+  app.use('/api/', apirouter);
 } // api
 
 module.exports = api;

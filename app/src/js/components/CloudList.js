@@ -5,11 +5,18 @@ var Cloud = require('./Cloud');
 
 var CreateCloud = React.createClass({
   handleClick: function() {
-    var t = $('.createcloud_title').val();
-    var d = $('.createcloud_desc').val();
-    client.createCloud(t, d);
-    $('.createcloud_title').val('');
-    $('.createcloud_desc').val('');
+    var t = $('#createcloud_title').val();
+    var d = $('#createcloud_desc').val();
+
+    client.api.clouds(null, t, d,
+       function done (data, status, xhr) {
+      console.log('In cloudlist, success');
+    }, function fail (xhr, status, err) {
+      console.log('In cloudlist, fail');
+    });
+
+    $('#createcloud_title').val('');
+    $('#createcloud_desc').val('');
   },
 
   render: function() {

@@ -79,6 +79,40 @@ var reqs = {
   },
 };
 
+// api calls to host/api/*
+// requires being logged in
+var api = {
+  clouds: function(parentCloud, title, desc, done, fail) {
+
+    var data = {
+      parentCloud: null, // TODO
+      title: title,
+      desc: desc,
+    }
+
+    function success (data, status, xhr) {
+      utils.showXHR(xhr, 'success');
+      done(data, status, xhr);
+    }
+
+    function error (xhr, status, err) {
+      utils.showXHR(xhr, 'error');
+      fail(xhr, status, err);
+    }
+
+    ajax({
+      type: 'POST',
+      url: base_api_url + 'clouds',
+      data: JSON.stringify(data),
+      contentType: 'application/json; utf-8',
+      dataType: 'json',
+
+      success: success,
+      error: error
+    });
+  },
+};
+
 var client = {
   setToken: function (tkn) {
     user.token = tkn;
@@ -129,13 +163,7 @@ var client = {
     }
   },
 
-  createCloud: function(title, value) {
-    ajax('createcloud', data,
-        function done (data, status, xhr) {
-        },
-        function fail () {
-        });
-  },
+  api: api,
 
   login: function (data, done, fail) {
     console.log('in CLIENT API: login!');
@@ -184,11 +212,14 @@ var client = {
 
     function success (data, status, xhr) {
       console.log('Registration Success, status: ' + status);
+      var msg = "You've successfully registered!";
+      utils.showMessage(xhr.message || msg, 'success');
       done(data, status, xhr);
     };
 
     function error (xhr, status, err) {
       console.log('Registration Failed, status: ' + status);
+      utils.showXHR(xhr);
       fail(xhr, status, err);
     };
 
@@ -315,11 +346,18 @@ var Cloud = require('./Cloud');
 
 var CreateCloud = React.createClass({displayName: "CreateCloud",
   handleClick: function() {
-    var t = $('.createcloud_title').val();
-    var d = $('.createcloud_desc').val();
-    client.createCloud(t, d);
-    $('.createcloud_title').val('');
-    $('.createcloud_desc').val('');
+    var t = $('#createcloud_title').val();
+    var d = $('#createcloud_desc').val();
+
+    client.api.clouds(null, t, d,
+       function done (data, status, xhr) {
+      console.log('In cloudlist, success');
+    }, function fail (xhr, status, err) {
+      console.log('In cloudlist, fail');
+    });
+
+    $('#createcloud_title').val('');
+    $('#createcloud_desc').val('');
   },
 
   render: function() {
@@ -1217,16 +1255,16 @@ var utils = (function() {
     msgEl = el;
   };
 
-  function showXHR(xhr) {
+  function showXHR(xhr, type) {
     var json = $.parseJSON(xhr.responseText);
     var error = json.error || json.err;
     var message = json.message || json.msg || json.info;
 
     if (message) {
-      showMessage("Message: " + message, 'warning');
+      showMessage("Message: " + message, type || 'warning');
     } else 
       if (error) {
-        showMessage("Error: " + error, 'error');
+        showMessage("Error: " + error, type || 'error');
       }
   };
 

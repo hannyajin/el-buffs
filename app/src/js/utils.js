@@ -107,16 +107,16 @@ var utils = (function() {
     msgEl = el;
   };
 
-  function showXHR(xhr) {
+  function showXHR(xhr, type) {
     var json = $.parseJSON(xhr.responseText);
     var error = json.error || json.err;
     var message = json.message || json.msg || json.info;
 
     if (message) {
-      showMessage("Message: " + message, 'warning');
+      showMessage("Message: " + message, type || 'warning');
     } else 
       if (error) {
-        showMessage("Error: " + error, 'error');
+        showMessage("Error: " + error, type || 'error');
       }
   };
 

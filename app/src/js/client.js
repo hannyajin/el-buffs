@@ -35,6 +35,40 @@ var reqs = {
   },
 };
 
+// api calls to host/api/*
+// requires being logged in
+var api = {
+  clouds: function(parentCloud, title, desc, done, fail) {
+
+    var data = {
+      parentCloud: null, // TODO
+      title: title,
+      desc: desc,
+    }
+
+    function success (data, status, xhr) {
+      utils.showXHR(xhr, 'success');
+      done(data, status, xhr);
+    }
+
+    function error (xhr, status, err) {
+      utils.showXHR(xhr, 'error');
+      fail(xhr, status, err);
+    }
+
+    ajax({
+      type: 'POST',
+      url: base_api_url + 'clouds',
+      data: JSON.stringify(data),
+      contentType: 'application/json; utf-8',
+      dataType: 'json',
+
+      success: success,
+      error: error
+    });
+  },
+};
+
 var client = {
   setToken: function (tkn) {
     user.token = tkn;
@@ -85,13 +119,7 @@ var client = {
     }
   },
 
-  createCloud: function(title, value) {
-    ajax('createcloud', data,
-        function done (data, status, xhr) {
-        },
-        function fail () {
-        });
-  },
+  api: api,
 
   login: function (data, done, fail) {
     console.log('in CLIENT API: login!');
@@ -140,11 +168,14 @@ var client = {
 
     function success (data, status, xhr) {
       console.log('Registration Success, status: ' + status);
+      var msg = "You've successfully registered!";
+      utils.showMessage(xhr.message || msg, 'success');
       done(data, status, xhr);
     };
 
     function error (xhr, status, err) {
       console.log('Registration Failed, status: ' + status);
+      utils.showXHR(xhr);
       fail(xhr, status, err);
     };
 
