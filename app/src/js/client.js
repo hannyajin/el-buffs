@@ -48,6 +48,12 @@ var api = {
 
     function success (data, status, xhr) {
       utils.showXHR(xhr, 'success');
+      // add the cloud to the users list
+      if (user.clouds)
+        user.clouds.push(data.doc);
+      else
+        user.clouds = [data.doc];
+
       done(data, status, xhr);
     }
 
@@ -132,7 +138,7 @@ var client = {
       user.email = data.userData.email;
       user.lastlogin = data.userData.lastlogin;
 
-      user.clouds = data.userData.clouds;
+      user.clouds = data.userData.clouds || [];
       user.comments = data.userData.comments;
 
       user.token = data.token;

@@ -223,20 +223,6 @@ function api (app) {
     next();
   });
 
-//  apirouter.get('*', function (req, res, next) {
-//    // TODO this look good, add Authorization headers to client side
-//    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
-//    req.token = token;
-//    req.user = tokenStore[token];
-//    next();
-//  });
-//  apirouter.post('*', function (req, res, next) {
-//    var token = req.get('Authorization').split(' ', 1)[1] || req.body.token;
-//    req.token = token;
-//    req.user = tokenStore[token];
-//    next();
-//  });
-
   apirouter.get('/users/:me', function (req, res) {
     if (req.user) {
       return res.status(200).json({username: req.user.username, email: req.user.email});
@@ -249,7 +235,7 @@ function api (app) {
 
     var json = req.body;
 
-    console.log('json: ' + json);
+    console.log('json.title: ' + json.title);
 
     if (req.user) {
       var cloud = {
@@ -275,6 +261,7 @@ function api (app) {
         // else saved
         console.log('cloud created: ' + doc);
         return res.status(201).json({
+          doc: cloud,
           message: "Cloud was Successfully created!"
         });
       });

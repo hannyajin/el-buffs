@@ -33,23 +33,13 @@ var CreateCloud = React.createClass({
 var CloudList = React.createClass({
   getInitialState: function() {
     var list = user.clouds;
-    if (!list || list.length > 0) return null;
-    // add some defaul temp clouds
-    list.push({
-      creator: 'Kalle',
-      cloud: null, // no parent cloud
-      title: 'Sample Title',
-      desc: 'This is a sample cloud for testing.',
-      tags: ['a_tag', 'b_tag'],
-    });
-
-    // TODO get ajax data from cloud??
-    return null;
+    return {list: user.clouds};
   },
 
   render: function () {
     var user = client.getUser();
     var list = user.clouds;
+    console.log("list: " + list);
 
     // create an array of Clouds
     if (list) {

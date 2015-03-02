@@ -92,6 +92,12 @@ var api = {
 
     function success (data, status, xhr) {
       utils.showXHR(xhr, 'success');
+      // add the cloud to the users list
+      if (user.clouds)
+        user.clouds.push(data.doc);
+      else
+        user.clouds = [data.doc];
+
       done(data, status, xhr);
     }
 
@@ -176,7 +182,7 @@ var client = {
       user.email = data.userData.email;
       user.lastlogin = data.userData.lastlogin;
 
-      user.clouds = data.userData.clouds;
+      user.clouds = data.userData.clouds || [];
       user.comments = data.userData.comments;
 
       user.token = data.token;
@@ -328,9 +334,9 @@ var Cloud = React.createClass({displayName: "Cloud",
       React.createElement("div", {className: "cloud"}, 
         React.createElement("a", {href: "/", title: d.title}, 
           React.createElement("img", {src: d.imgsrc}), 
-          React.createElement("span", null, d.title), 
+          React.createElement("span", null, d.title)
+        ), 
           React.createElement("span", null, d.desc)
-        )
       )
     );
   }
@@ -374,23 +380,13 @@ var CreateCloud = React.createClass({displayName: "CreateCloud",
 var CloudList = React.createClass({displayName: "CloudList",
   getInitialState: function() {
     var list = user.clouds;
-    if (!list || list.length > 0) return null;
-    // add some defaul temp clouds
-    list.push({
-      creator: 'Kalle',
-      cloud: null, // no parent cloud
-      title: 'Sample Title',
-      desc: 'This is a sample cloud for testing.',
-      tags: ['a_tag', 'b_tag'],
-    });
-
-    // TODO get ajax data from cloud??
-    return null;
+    return {list: user.clouds};
   },
 
   render: function () {
     var user = client.getUser();
     var list = user.clouds;
+    console.log("list: " + list);
 
     // create an array of Clouds
     if (list) {

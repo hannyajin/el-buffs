@@ -9,8 +9,8 @@ var Cloud = React.createClass({
         <a href='/' title={d.title}>
           <img src={d.imgsrc} />
           <span>{d.title}</span>
-          <span>{d.desc}</span>
         </a>
+          <span>{d.desc}</span>
       </div>
     );
   }
