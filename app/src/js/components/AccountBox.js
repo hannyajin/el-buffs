@@ -5,6 +5,14 @@ var Dropdown = require('./Dropdown');
 var client = require('../client'); // not a react component
 
 var AccountBox = React.createClass({
+  componentDidMount: function () {
+    var self = this;
+    client.addUserListener(function() {
+      console.log("FORCE UPDATING!!");
+      self.forceUpdate();
+    });
+  },
+
   render: function () {
     var user = client.getUser();
 

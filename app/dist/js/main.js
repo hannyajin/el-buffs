@@ -119,6 +119,15 @@ var api = {
   },
 };
 
+var userListeners = [];
+function updateUserListeners() {
+  console.log("UPDATING USER LISTENERS ----- ");
+  for (var i = 0; i < userListeners.length; i++) {
+    var l = userListeners[i];
+    l();
+  }
+};
+
 var client = {
   setToken: function (tkn) {
     user.token = tkn;
@@ -126,9 +135,20 @@ var client = {
 
   setUser: function(usr) {
     user = usr;
+    updateUserListeners();
   },
 
-  getUser: function() {
+  addUserListener: function(cb) {
+    userListeners.push(cb);
+  },
+
+  removeUserListener: function(cb) {
+    var i = userListeners.indexOf(cb);
+    if (i >= 0)
+      userListeners.splice(i, 1);
+  },
+
+  getUser: function(cb) {
     return user;
   },
 
@@ -143,6 +163,8 @@ var client = {
       function success (data, status, xhr) {
         user.token = null;
         user.loggedIn = false;
+        user.username = null;
+        updateUserListeners();
         setTimeout(function() {
           var msg = "You've successfully logged out";
           utils.showMessage(data.message || msg, 'success');
@@ -295,6 +317,14 @@ var Dropdown = require('./Dropdown');
 var client = require('../client'); // not a react component
 
 var AccountBox = React.createClass({displayName: "AccountBox",
+  componentDidMount: function () {
+    var self = this;
+    client.addUserListener(function() {
+      console.log("FORCE UPDATING!!");
+      self.forceUpdate();
+    });
+  },
+
   render: function () {
     var user = client.getUser();
 
