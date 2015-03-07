@@ -5,6 +5,7 @@ function api (app) {
   var mail = require('./mail');
 
   var base_url = process.env.HOST || 'HTTP://localhost:8000/';
+  console.log("base_url set at: " + base_url);
 
   /* Login */
   var store = {};
