@@ -4,7 +4,7 @@ function api (app) {
   var sha1 = require('sha1');
   var mail = require('./mail');
 
-  var base_url = 'HTTP://localhost:8000/';
+  var base_url = process.env.HOST || 'HTTP://localhost:8000/';
 
   /* Login */
   var store = {};
