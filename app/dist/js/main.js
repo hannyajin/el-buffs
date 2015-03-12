@@ -415,8 +415,41 @@ var CreateCloud = React.createClass({displayName: "CreateCloud",
           React.createElement("input", {type: "text", id: "createcloud_title"}), 
           React.createElement("input", {type: "text", id: "createcloud_desc"}), 
 
+          React.createElement(MemberList, null), 
+
           React.createElement("button", {type: "button", onClick: this.swap}, "Cancel"), 
           React.createElement("button", {type: "button", onClick: this.handleCreate}, "Create Cloud")
+        )
+      )
+    );
+  }
+});
+
+var MemberList = React.createClass({displayName: "MemberList",
+  getInitialState: function () {
+    return {
+      swap: false,
+      members: []
+    }
+  },
+  add: function () {
+    this.swap();
+  },
+  swap: function () {
+    this.setState({swap: !this.state.swap});
+  },
+  getSwap: function (swap) {
+    return swap ? "none" : "block"
+  },
+  render: function() {
+    var s = this.state.swap;
+    return (
+      React.createElement("div", null, 
+        React.createElement("button", {style: {display: this.getSwap(s)}, type: "button", onClick: this.add}, "Add Member"), 
+        React.createElement("div", {style: {display: this.getSwap(!s)}}, 
+          React.createElement("input", {type: "text", id: ""}), 
+          React.createElement("button", {onClick: this.swap, type: "button"}, "Cancel"), 
+          React.createElement("button", {onClick: this.add, type: "button"}, "Add")
         )
       )
     );

@@ -38,8 +38,41 @@ var CreateCloud = React.createClass({
           <input type='text' id='createcloud_title' />
           <input type='text' id='createcloud_desc' />
 
+          <MemberList />
+
           <button type='button' onClick={this.swap}>Cancel</button>
           <button type='button' onClick={this.handleCreate}>Create Cloud</button>
+        </div>
+      </div>
+    );
+  }
+});
+
+var MemberList = React.createClass({
+  getInitialState: function () {
+    return {
+      swap: false,
+      members: []
+    }
+  },
+  add: function () {
+    this.swap();
+  },
+  swap: function () {
+    this.setState({swap: !this.state.swap});
+  },
+  getSwap: function (swap) {
+    return swap ? "none" : "block"
+  },
+  render: function() {
+    var s = this.state.swap;
+    return (
+      <div>
+        <button style={{display: this.getSwap(s)}} type='button' onClick={this.add}>Add Member</button>
+        <div style={{display: this.getSwap(!s)}}>
+          <input type="text" id="" />
+          <button onClick={this.swap} type="button">Cancel</button>
+          <button onClick={this.add} type="button">Add</button>
         </div>
       </div>
     );
