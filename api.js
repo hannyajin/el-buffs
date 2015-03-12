@@ -221,12 +221,22 @@ function api (app) {
     req.token = token;
     req.user = tokenStore[token];
     console.log('   TOKEN: ' + token);
+
+    if(!req.user) {
+      console.log("No user for that token");
+      return res.status(401).json({
+        error: '401 Unauthorized - no user for that token.',
+        message:'401 Unauthorized - no user for that token.'
+      }).end();
+    }
+
+    // there's a valid user for that token, proceed
     next();
   });
 
   apirouter.get('/users/:me', function (req, res) {
     if (req.user) {
-      return res.status(200).json({username: req.user.username, email: req.user.email});
+      return res.status(200).json(req.user);
     }
     return res.status(400).json({error: 'Not logged in.'});
   });
@@ -238,41 +248,61 @@ function api (app) {
 
     console.log('json.title: ' + json.title);
 
-    if (req.user) {
-      var cloud = {
-        creator: req.user._id,
-        cloud: json.parentCloud, // null for no parent
-        title: json.title,
-        desc: json.desc,
-        tags: json.tags,
+    var cloud = {
+      creator: req.user._id,
+      cloud: json.parentCloud, // null for no parent
+      title: json.title,
+      desc: json.desc,
+      tags: json.tags,
 
-        members: json.members,
-        invites: json.invites,
-      };
+      members: json.members,
+      invites: json.invites,
+    };
 
-      console.log('creating cloud...');
-      db.models.Cloud.create( cloud, function (err, doc) {
-        if (err) {
-          console.log('cloud creation error: ' + err);
-          return res.status(500).json({
-            error: "Internal server error, couldn't create cloud",
-            message: "Internal server error 500, failed to create cloud."
+    console.log('creating cloud...');
+    db.models.Cloud.create( cloud, function (err, doc) {
+      if (err) {
+        console.log('cloud creation error: ' + err);
+        return res.status(500).json({
+          error: "Internal server error, couldn't create cloud",
+          message: "Internal server error 500, failed to create cloud."
+        });
+      }
+      // else saved
+      console.log('cloud created: ' + doc);
+      return res.status(201).json({
+        doc: cloud,
+        message: "Cloud was Successfully created!"
+      });
+    });
+  }); // post /cloud
+
+  apirouter.get('/clouds', function (req res) {
+    // get all of users clouds
+    var clouds = req.user.clouds;
+    console.log("Sending cloud list to user: " + clouds);
+    return res.status(200).json(clouds).end();
+  });
+
+  apirouter.post('/clouds/:cloudid', function (req, res) {
+    // accept invitation to cloud
+    db.models.Cloud.findOne({_id: req.params.cloudid}, function (err, doc) {
+      if (err) {
+        return res.status(500).json({error: "500 server error"}).end();
+      }
+      // check that the cloud has an invitation for the user
+      for (var i = 0; i < doc.invites.length; i++) {
+        var item = doc.invites[i];
+        if (item === req.user.email) {
+          // invite found
+          console.log("user " + req.user.email + " joined group " + doc.title);
+          doc.members.push(req.user._id);
+          return res.status(200).json({
+            message: "Successfully joined " + doc.title + " group"
           });
         }
-        // else saved
-        console.log('cloud created: ' + doc);
-        return res.status(201).json({
-          doc: cloud,
-          message: "Cloud was Successfully created!"
-        });
-      });
-    } else {
-      // not allowed to create cloud when not logged in
-      return res.status(405).json({
-        error: 'Cloud creation required login',
-        message: 'You need to be logged in to create a cloud'
-      });
-    }
+      }
+    });
   });
 
   app.use('/api/', apirouter);
