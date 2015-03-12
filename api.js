@@ -277,7 +277,7 @@ function api (app) {
     });
   }); // post /cloud
 
-  apirouter.get('/clouds', function (req res) {
+  apirouter.get('/clouds', function (req, res) {
     // get all of users clouds
     var clouds = req.user.clouds;
     console.log("Sending cloud list to user: " + clouds);

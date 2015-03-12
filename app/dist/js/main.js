@@ -380,14 +380,24 @@ var React = require('react');
 var client = require('../client');
 var Cloud = require('./Cloud');
 
+// input forms for creating cloud
 var CreateCloud = React.createClass({displayName: "CreateCloud",
-  handleClick: function() {
+  getInitialState: function () {
+    return {swap: false}
+  },
+  swap: function () {
+    this.setState({swap: !this.state.swap});
+  },
+  handleCreate: function() {
     var t = $('#createcloud_title').val();
     var d = $('#createcloud_desc').val();
+
+    var self = this;
 
     client.api.clouds(null, t, d,
        function done (data, status, xhr) {
       console.log('In cloudlist, success');
+      self.swap();
     }, function fail (xhr, status, err) {
       console.log('In cloudlist, fail');
     });
@@ -399,9 +409,15 @@ var CreateCloud = React.createClass({displayName: "CreateCloud",
   render: function() {
     return (
       React.createElement("div", null, 
-        React.createElement("input", {type: "text", id: "createcloud_title"}), 
-        React.createElement("input", {type: "text", id: "createcloud_desc"}), 
-        React.createElement("button", {type: "button", onClick: this.handleClick}, "Create Cloud")
+        React.createElement("button", {style: {display: this.state.swap ? "none":"block"}, type: "button", onClick: this.swap}, "Create Cloud"), 
+
+        React.createElement("div", {style: {display: !this.state.swap ? "none":"block"}}, 
+          React.createElement("input", {type: "text", id: "createcloud_title"}), 
+          React.createElement("input", {type: "text", id: "createcloud_desc"}), 
+
+          React.createElement("button", {type: "button", onClick: this.swap}, "Cancel"), 
+          React.createElement("button", {type: "button", onClick: this.handleCreate}, "Create Cloud")
+        )
       )
     );
   }
